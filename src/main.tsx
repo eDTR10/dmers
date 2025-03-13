@@ -12,8 +12,16 @@ const Dashbaord= lazy(() =>
   wait(1300).then(() => import("./screens/dashsboard.tsx"))
 );
 
-const Page2= lazy(() =>
-  wait(1300).then(() => import("./screens/page2.tsx"))
+// const Page2= lazy(() =>
+//   wait(1300).then(() => import("./screens/page2.tsx"))
+// );
+
+
+const MisamisOriental= lazy(() =>
+  wait(1300).then(() => import("./screens/misor/MisamisOriental.tsx"))
+);
+const Camiguin= lazy(() =>
+  wait(1300).then(() => import("./screens/camiguin/Camiguin.tsx"))
 );
 
 const router = createBrowserRouter([
@@ -24,10 +32,10 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/dmers/", 
-        element: <Navigate to="/dmers/page1" />, 
+        element: <Navigate to="/dmers/dashboard" />, 
       },
       {
-        path: "/dmers/page1",
+        path: "/dmers/dashboard",
         element: <>
         <Suspense fallback={<Loader />}>
           <Dashbaord/>
@@ -35,10 +43,18 @@ const router = createBrowserRouter([
       </>,
       },
       {
-        path: "/dmers/page2",
+        path: "/dmers/misamis-oriental",
         element: <>
         <Suspense fallback={<Loader />}>
-          <Page2 />
+          <MisamisOriental />
+        </Suspense>
+      </>,
+      },
+      {
+        path: "/dmers/camiguin",
+        element: <>
+        <Suspense fallback={<Loader />}>
+          <Camiguin />
         </Suspense>
       </>,
       },

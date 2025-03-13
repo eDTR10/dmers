@@ -138,8 +138,8 @@ const Dashbaord: React.FC = () => {
 
   // Infrastructure data
   const infrastructureData = {
-    labels: ["Human capacity", "Environment", "Connectivity", "Lag profile", "Region VII", "Region VIII", "Viayera"],
-    values: [0.15, 0.3, 0.1, 0.2, 0.05, 0.25, 0.15],
+    labels: ["Human capacity", "Environment", "Connectivity"],
+    values: [0.15, 0.3, 0.1, 0.2],
     colors: ["#1a4b91", "#f6c23e", "#1a4b91", "#1a4b91", "#1a4b91", "#a6bfed", "#a6bfed"]
   };
 

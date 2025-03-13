@@ -24,6 +24,10 @@
  
 }
 
+body{
+  font-family: 'Gilroy-Medium', sans-serif;
+}
+
 
 
 @layer base {
