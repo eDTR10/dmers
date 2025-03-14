@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>React Router</title>
-    <script type="text/javascript">
-      var pathSegmentsToKeep = 1;
-
+<head>
+  <meta charset="utf-8" />
+  <title>React Router</title>
+  <script type="text/javascript">
+    (function() {
       var l = window.location;
-      l.replace(
-        l.protocol +
-          "//" +
-          l.hostname +
-          (l.port ? ":" + l.port : "") +
-          l.pathname
-            .split("/")
-            .slice(0, 1 + pathSegmentsToKeep)
-            .join("/") +
-          "/?/" +
-          l.pathname.slice(1).split("/").slice(pathSegmentsToKeep).join("/").replace(/&/g, "~and~") +
-          (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +
-          l.hash
-      );
-    </script>
-  </head>
-  <body></body>
+
+      var pathname2 = l.pathname;
+      if (pathname2.split('/').filter(Boolean).length > 1) {
+        var redirectUrl2 = l.protocol + '//' + l.host + '/index.html?redirect=' + encodeURIComponent(pathname2 + l.search + l.hash);
+        window.location.replace(redirectUrl2);
+      }else{
+        var pathname = l.pathname.split("/").slice(0, -1).join("/");
+        var redirectUrl = l.protocol + "//" + l.host + pathname + "/index.html?redirect=" + encodeURIComponent(l.pathname + l.search + l.hash);
+        window.location.replace(redirectUrl);
+      }
+
+      // var pathname = l.pathname.split("/").slice(0, -1).join("/");
+      // var redirectUrl = l.protocol + "//" + l.host + pathname + "/index.html?redirect=" + encodeURIComponent(l.pathname + l.search + l.hash);
+      // window.location.replace(redirectUrl);
+    })();
+  </script>
+</head>
+<body></body>
 </html>

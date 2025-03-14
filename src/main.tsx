@@ -26,16 +26,16 @@ const Camiguin= lazy(() =>
 
 const router = createBrowserRouter([
   {
-    path: "/dmers/",
+    path: "/",
     element: <App />,
     
     children: [
       {
-        path: "/dmers/", 
-        element: <Navigate to="/dmers/dashboard" />, 
+        path: "/", 
+        element: <Navigate to="/dashboard" />, 
       },
       {
-        path: "/dmers/dashboard",
+        path: "/dashboard",
         element: <>
         <Suspense fallback={<Loader />}>
           <Dashbaord/>
@@ -43,7 +43,7 @@ const router = createBrowserRouter([
       </>,
       },
       {
-        path: "/dmers/misamis-oriental",
+        path: "/misamis-oriental",
         element: <>
         <Suspense fallback={<Loader />}>
           <MisamisOriental />
@@ -51,7 +51,7 @@ const router = createBrowserRouter([
       </>,
       },
       {
-        path: "/dmers/camiguin",
+        path: "/camiguin",
         element: <>
         <Suspense fallback={<Loader />}>
           <Camiguin />
