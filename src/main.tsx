@@ -24,6 +24,13 @@ const Camiguin= lazy(() =>
   wait(1300).then(() => import("./screens/camiguin/Camiguin.tsx"))
 );
 
+const About = lazy(() =>
+  wait(1300).then(() => import("./screens/misor/about.tsx"))
+);
+const About2 = lazy(() =>
+  wait(1300).then(() => import("./screens/camiguin/about.tsx"))
+);
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -47,6 +54,24 @@ const router = createBrowserRouter([
         element: <>
         <Suspense fallback={<Loader />}>
           <MisamisOriental />
+        </Suspense>
+      </>,
+      },
+      {
+        path: "/misamis-oriental/:lguName",
+        element: <>
+        <Suspense fallback={<Loader />}>
+          <About/>
+        </Suspense>
+      </>,
+      },
+
+      ,
+      {
+        path: "/camiguin/:lguName",
+        element: <>
+        <Suspense fallback={<Loader />}>
+          <About2/>
         </Suspense>
       </>,
       },
