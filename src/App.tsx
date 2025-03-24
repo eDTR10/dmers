@@ -4,6 +4,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { Building2Icon, Home, Menu, X } from "lucide-react";
 import Buildings from './assets/buildings.png';
 import { useState, useEffect } from "react";
+import { DashboardProvider } from './hooks/DashboardContext';
 
 function App() {
   const location = useLocation();
@@ -33,6 +34,7 @@ function App() {
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   return (
+    <DashboardProvider>
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <div className="relative bg-background h-screen w-screen flex overflow-hidden">
         {/* Burger Menu Button - Only visible on mobile */}
@@ -46,9 +48,9 @@ function App() {
         {/* Sidebar Navigation */}
         <nav className={`
           z-40 bg-[#0036C5] border-r-2 
-          w-[280px] h-full md:fixed relative
+          w-[280px] h-full md:absolute relative
           transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${isOpen ? 'translate-x-0' : ' fixed -translate-x-full'}
         `}>
           <Link className="justify-center w-full flex items-center text-white" to="/">
             <img src={viteLogo} className="logo mt-4 h-20 object-contain" alt="Vite logo" />
@@ -89,7 +91,7 @@ function App() {
         {/* Main content area that adjusts with sidebar */}
         <main className={`
           flex-1 transition-all duration-300 ease-in-out
-          ${isOpen ? 'md:ml-[280px]' : 'ml-0'}
+          ${isOpen ? '' : 'ml-0'}
           z-30 min-h-full flex flex-col gap-2 overflow-y-auto
         `}>
           <Outlet />
@@ -97,6 +99,7 @@ function App() {
         </main>
       </div>
     </ThemeProvider>
+    </DashboardProvider>
   );
 }
 

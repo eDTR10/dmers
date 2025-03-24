@@ -65,8 +65,6 @@ const router = createBrowserRouter([
         </Suspense>
       </>,
       },
-
-      ,
       {
         path: "/camiguin/:lguName",
         element: <>

@@ -67,6 +67,14 @@ interface DashboardProps {
   gridColsBase?: number;
 }
 
+// Updated scaleToPercentage based on about.tsx
+const scaleToPercentage = (value: number) => {
+  return ((value - 1) / 5) * 100;
+};
+
+// For Digital Skills Assessment:
+
+
 const TechnologyCard: React.FC<CardProps> = ({ title, percentage, barData, maxBarValue = 100, colSpan = 1 }) => {
   // Gauge chart data
   const gaugeData = {
@@ -136,8 +144,9 @@ const TechnologyCard: React.FC<CardProps> = ({ title, percentage, barData, maxBa
           font: {
             size: 8
           },
-          callback: function(value: any) {
-            const label = this.getLabelForValue(value);
+          callback: function(_value: any, index: number) {
+            const labels = barData.labels;
+            const label = labels[index];
             return label.length > 20 ? label.substr(0, 20) + '...' : label;
           }
         }
@@ -231,16 +240,23 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Get all offices data from the JSON
   const getAllOfficesData = () => {
-    const allOffices = [];
+    const allowedOffices = ["Mayors Office", "Other Offices", "HR Office", "IT Office"];
+    const allOffices:any = [];
     
-    // Iterate through all offices in the data
+    // Iterate through allowed offices only
     Object.keys(data).forEach(officeKey => {
-      if (data[officeKey] && Array.isArray(data[officeKey])) {
+      if (allowedOffices.includes(officeKey) && data[officeKey] && Array.isArray(data[officeKey])) {
         allOffices.push(...data[officeKey]);
       }
     });
-    
+  
+    console.log("allOffices", allOffices);
     return allOffices;
+  };
+
+  const calculateAverage = (values: number[]) => {
+    const validValues = values.filter(val => val !== null && val !== undefined);
+    return validValues.length ? validValues.reduce((a, b) => a + b, 0) / validValues.length : 0;
   };
 
   // Helper function to calculate percentage score
@@ -272,32 +288,29 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     const allOfficesData = getAllOfficesData();
     
-    if (allOfficesData.length === 0) {
-      console.error("No office data found");
-      return;
-    }
-    
-    const skillsKeys = Array.from({ length: 10 }, (_, i) => `Question ${i + 1} DigitalSkillsAssessment`);
-    
-    // Calculate average score for each question across all offices
-    const skillsValues = skillsKeys.map(key => {
-      const validValues = allOfficesData
-        .filter(office => office && office[key] !== undefined && office[key] !== null)
-        .map(office => parseFloat(office[key]) || 0);
-      
-      if (validValues.length === 0) return 0;
-      
-      return calculatePercentageScore(validValues);
-    });
+if (allOfficesData.length === 0) {
+  console.error("No office data found");
+  return;
+}
 
-    // Calculate overall percentage
-    const overallPercentage = skillsValues.reduce((sum, value) => sum + value, 0) / skillsValues.length;
+const skillsKeys = Array.from({ length: 10 }, (_, i) => `Question ${i + 1} DigitalSkillsAssessment`);
 
-    setDigitalSkillsData({
-      labels: digitalSkillsLabels,
-      values: skillsValues,
-      percentage: overallPercentage
-    });
+// For each digital skills question, map each office's response using scaleToPercentage, then average the percentages
+const skillsValues = skillsKeys.map(key => {
+  const percentages = allOfficesData
+    .map((office:any) => scaleToPercentage(Number(office[key] || 0)))
+    .filter((value:any) => !isNaN(value));
+  return percentages.length ? calculateAverage(percentages) : 0;
+});
+
+// Calculate overall average percentage across questions
+const overallPercentage = skillsValues.reduce((sum, value) => sum + value, 0) / skillsValues.length;
+
+setDigitalSkillsData({
+  labels: digitalSkillsLabels,
+  values: skillsValues,
+  percentage: overallPercentage
+});
   };
 
   // Process Technology Readiness Index data
@@ -311,46 +324,58 @@ const Dashboard: React.FC<DashboardProps> = ({
     
     // Define categories and their question keys
     const categories = {
-      "OPTIMISM": Array.from({ length: 10 }, (_, i) => `Optimism ${i + 1}`),
-      "INNOVATIVENESS": Array.from({ length: 7 }, (_, i) => `Innovativeness ${i + 1}`),
-      "DISCOMFORT": Array.from({ length: 10 }, (_, i) => `Discomfort ${i + 1}`),
-      "INSECURITY": Array.from({ length: 9 }, (_, i) => `Insecurity ${i + 1}`)
+      'OPTIMISM': Array.from({ length: 10 }, (_, i) => `Optimism ${i + 1}`),
+      'INNOVATIVENESS': Array.from({ length: 7 }, (_, i) => `Innovativeness ${i + 1}`),
+      'DISCOMFORT': Array.from({ length: 10 }, (_, i) => `Discomfort ${i + 1}`),
+      'INSECURITY': Array.from({ length: 9 }, (_, i) => `Insecurity ${i + 1}`)
     };
-    
-    // Calculate average score for each category
+
+    // Calculate scores for each category by converting each office's answer and averaging per question
     const categoryScores = Object.entries(categories).map(([category, keys]) => {
-      const validValues: number[] = [];
-      
-      keys.forEach(key => {
-        allOfficesData.forEach(office => {
-          if (office && office[key] !== undefined && office[key] !== null) {
-            validValues.push(parseFloat(office[key]) || 0);
-          }
-        });
+      const scores = keys.map(key => {
+        const percentages = allOfficesData
+          .map((office:any) => scaleToPercentage(Number(office[key] || 0)))
+          .filter((value:any) => !isNaN(value));
+        return {
+          question: key,
+          score: percentages.length ? calculateAverage(percentages) : 0
+        };
       });
-      
-      return {
-        category,
-        score: calculatePercentageScore(validValues)
-      };
+
+      const categoryAverage = calculateAverage(scores.map(item => item.score));
+
+      return { category, scores, average: categoryAverage };
     });
-    
-    // Calculate overall percentage
-    const optimismScore = categoryScores.find(item => item.category === "OPTIMISM")?.score || 0;
-    const innovativenessScore = categoryScores.find(item => item.category === "INNOVATIVENESS")?.score || 0;
-    const discomfortScore = categoryScores.find(item => item.category === "DISCOMFORT")?.score || 0;
-    const insecurityScore = categoryScores.find(item => item.category === "INSECURITY")?.score || 0;
-    
-    // Calculate TRI using the formula: (Optimism + Innovativeness + Discomfort + Insecurity)/4
-    const triScore = (optimismScore + innovativenessScore + discomfortScore + insecurityScore) / 4;
-    
+
+    console.log("categoryScores", categoryScores)
+
+    // Calculate TRI score with inverted negative dimensions
+    const optimismScore = categoryScores.find(item => item.category === "OPTIMISM")?.average || 0;
+    const innovativenessScore = categoryScores.find(item => item.category === "INNOVATIVENESS")?.average || 0;
+    const discomfortScore = categoryScores.find(item => item.category === "DISCOMFORT")?.average || 0;
+    const insecurityScore = categoryScores.find(item => item.category === "INSECURITY")?.average || 0;
+
+    // Calculate final TRI score with inverted negative dimensions
+    const triScore = (
+      optimismScore + 
+      innovativenessScore + 
+      (100 - discomfortScore) + 
+      (100 - insecurityScore)
+    ) / 4;
+
     setTRIData({
       labels: Object.keys(categories),
-      values: categoryScores.map(item => item.score),
+      values: categoryScores.map(item => {
+        if (item.category === "DISCOMFORT" || item.category === "INSECURITY") {
+          return 100 - item.average; // Invert negative dimensions for display
+        }
+        return item.average;
+      }),
       percentage: triScore
     });
   };
 
+  console.log("triData" , triData)
   // Process IT Readiness data
   const processITReadinessData = () => {
     const allOfficesData = getAllOfficesData();
@@ -368,6 +393,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       "IT POLICIES": Array.from({ length: 3 }, (_, i) => `IT POLICIES AND PROCEDURES ${i + 1}`),
       "RISK MANAGEMENT": Array.from({ length: 3 }, (_, i) => `RISK MANAGEMENT ${i + 1}`),
       "PERFORMANCE MEASUREMENT": Array.from({ length: 3 }, (_, i) => `IT PERFORMANCE MEASUREMENT AND REPORTING ${i + 1}`),
+      "IT INVESTMENT MANAGEMENT": Array.from({ length: 3 }, (_, i) => `IT INVESTMENT MANAGEMENT ${i + 1}`),
       "VENDOR MANAGEMENT": Array.from({ length: 3 }, (_, i) => `VENDOR MANAGEMENT ${i + 1}`),
       "IT SECURITY": Array.from({ length: 3 }, (_, i) => `IT SECURITY AND COMPLIANCE ${i + 1}`),
       "ICT ORGANIZATION": Array.from({ length: 3 }, (_, i) => `ICT Organizational Structure and Skills ${i + 1}`),
@@ -376,6 +402,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       "STORAGE": Array.from({ length: 3 }, (_, i) => `Servers and Storage ${i + 1}`),
       "VIRTUALIZATION": Array.from({ length: 3 }, (_, i) => `Virtualization ${i + 1}`),
       "BACKUP": Array.from({ length: 3 }, (_, i) => `Data Backup and Recovery ${i + 1}`),
+      "SCALABILITY & ELASTICITY": Array.from({ length: 3 }, (_, i) => `Scalability and Elasticity ${i + 1}`),
+
       "SECURITY MEASURES": Array.from({ length: 4 }, (_, i) => `Security Measures ${i + 1}`),
       "MONITORING": Array.from({ length: 3 }, (_, i) => `Monitoring and Performance ${i + 1}`),
       "COMPLIANCE": Array.from({ length: 3 }, (_, i) => `Compliance and Governance ${i + 1}`),
@@ -387,7 +415,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       const validValues: number[] = [];
       
       keys.forEach(key => {
-        allOfficesData.forEach(office => {
+        allOfficesData.forEach((office:any) => {
           if (office && office[key] !== undefined && office[key] !== null) {
             validValues.push(parseFloat(office[key]) || 0);
           }
@@ -436,7 +464,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       const validValues: number[] = [];
       
       keys.forEach(key => {
-        allOfficesData.forEach(office => {
+        allOfficesData.forEach((office:any) => {
           if (office && office[key] !== undefined && office[key] !== null) {
             validValues.push(parseFloat(office[key]) || 0);
           }
@@ -468,7 +496,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
   
      
-        <div className={`grid grid-cols-${gridColsBase} gap-4`}>
+        <div className={`grid grid-cols-${gridColsBase} md:grid-cols-1  gap-4`}>
           <TechnologyCard 
             title={cardLayouts.digitalSkills?.title || "DIGITAL SKILLS ASSESSMENT"}
             percentage={digitalSkillsData.percentage} 

@@ -1,20 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import Data from './../../assets/data/eReadinessSurveyData.json';
 
-interface LGUInfo {
-  "LGU Name": string;
-  Mayor: string;
-  "Vice Mayor": string;
-  Barangays: number;
-  Province: string;
-  descriptioon: string;
-  Longitude: number;
-  Latitude: number;
-}
 
-const InfoCard = ({ label, value }: { label: string; value: string | number }) => (
-  <div className="bg-gray-50 p-4 rounded-lg border border-border">
+
+const InfoCard = ({ label, value,span }:any) => (
+  <div className={`bg-gray-50 p-4 rounded-lg border border-border col-span-${span ?span:1}`} >
     <div className="text-sm text-gray-700 mb-1">{label}</div>
     <div className="font-bold text-lg">{value}</div>
   </div>
@@ -66,30 +57,44 @@ const calculateAverage = (values: number[]) => {
 };
 
 const scaleToPercentage = (value: number) => {
-  return ((value - 1) / 4) * 100;
+  return ((value - 1) / 5) * 100;
 };
 
-// Update the calculateLGUDetailedScores function to handle multiple offices
+// Update the calculateLGUDetailedScores function to properly calculate IT Readiness scores
 const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   // Get IT Office data specifically for IT Readiness and Change Management
-  const itOfficeData = Data["IT Office"].find(data => data["LGU Name"] === lguName);
+  const itOfficeData:any = Data["IT Office"].find(data => data["LGU Name"] === lguName);
   
   // Get data from all offices for other assessments
-  const officesData = offices.map(office => 
-    Data[office].find(data => data["LGU Name"] === lguName)
-  ).filter(data => data);
+  let Datas:any = Data
+  let officesData:any = offices.map((office:any) => 
+  
+    Datas[office].filter((data:any)=>data["LGU Name"] === lguName)
+  )
 
+  officesData = Object.values(officesData).flat()
+  
+ 
+  
+  console.log('Offices Data:', officesData);
   if (!officesData.length) return null;
-
   // Combine scores from all offices for Digital Skills and Tech Readiness
-  const combinedScores = officesData.reduce((acc, data) => {
+  const combinedScores = officesData.reduce((acc:any, data:any) => {
     // Digital Skills and Tech Readiness calculations remain the same
     // Digital Skills Assessment
     const digitalSkillsKeys = Array.from({ length: 10 }, (_, i) => `Question ${i + 1} DigitalSkillsAssessment`);
+    console.log("Adasdas----")
+
+    console.log(data)
+    
+    
     const digitalSkillsScores = digitalSkillsKeys.map(key => ({
       question: key,
+      data: data[key],
       score: scaleToPercentage(Number(data[key] || 0))
     }));
+
+
 
     // Technology Readiness Index
     const categories = {
@@ -107,15 +112,18 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
       return {
         category,
         scores,
-        average: calculateAverage(scores.map(item => item.score))
+        average: calculateAverage(scores.map(item => item.score) ) 
       };
     });
+
+
+  
 
     // Accumulate scores
     if (!acc.digitalSkills) {
       acc.digitalSkills = { scores: digitalSkillsScores, count: 1 };
     } else {
-      acc.digitalSkills.scores = acc.digitalSkills.scores.map((score, index) => ({
+      acc.digitalSkills.scores = acc.digitalSkills.scores.map((score:any, index:any) => ({
         question: score.question,
         score: score.score + digitalSkillsScores[index].score
       }));
@@ -125,9 +133,9 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     if (!acc.techReadiness) {
       acc.techReadiness = { categories: categoryScores, count: 1 };
     } else {
-      acc.techReadiness.categories = acc.techReadiness.categories.map((cat, index) => ({
+      acc.techReadiness.categories = acc.techReadiness.categories.map((cat:any, index:any) => ({
         category: cat.category,
-        scores: cat.scores.map((score, i) => ({
+        scores: cat.scores.map((score:any, i:any) => ({
           question: score.question,
           score: score.score + categoryScores[index].scores[i].score
         })),
@@ -139,6 +147,9 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     return acc;
   }, {} as any);
 
+
+  console.log("Combine Scores:", combinedScores )
+  
   // Calculate IT Readiness scores using only IT Office data
   const itReadinessCategories = {
     "BASIC IT READINESS": Array.from({ length: 4 }, (_, i) => `BASIC IT READINESS ${i + 1}`),
@@ -147,6 +158,7 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     "IT POLICIES": Array.from({ length: 3 }, (_, i) => `IT POLICIES AND PROCEDURES ${i + 1}`),
     "RISK MANAGEMENT": Array.from({ length: 3 }, (_, i) => `RISK MANAGEMENT ${i + 1}`),
     "PERFORMANCE MEASUREMENT": Array.from({ length: 3 }, (_, i) => `IT PERFORMANCE MEASUREMENT AND REPORTING ${i + 1}`),
+    "IT INVESTMENT MANAGEMENT": Array.from({ length: 3 }, (_, i) => `IT INVESTMENT MANAGEMENT ${i + 1}`),
     "VENDOR MANAGEMENT": Array.from({ length: 3 }, (_, i) => `VENDOR MANAGEMENT ${i + 1}`),
     "IT SECURITY": Array.from({ length: 3 }, (_, i) => `IT SECURITY AND COMPLIANCE ${i + 1}`),
     "ICT ORGANIZATION": Array.from({ length: 3 }, (_, i) => `ICT Organizational Structure and Skills ${i + 1}`),
@@ -155,6 +167,8 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     "STORAGE": Array.from({ length: 3 }, (_, i) => `Servers and Storage ${i + 1}`),
     "VIRTUALIZATION": Array.from({ length: 3 }, (_, i) => `Virtualization ${i + 1}`),
     "BACKUP": Array.from({ length: 3 }, (_, i) => `Data Backup and Recovery ${i + 1}`),
+    "SCALABILITY & ELASTICITY": Array.from({ length: 3 }, (_, i) => `Scalability and Elasticity ${i + 1}`),
+
     "SECURITY MEASURES": Array.from({ length: 4 }, (_, i) => `Security Measures ${i + 1}`),
     "MONITORING": Array.from({ length: 3 }, (_, i) => `Monitoring and Performance ${i + 1}`),
     "COMPLIANCE": Array.from({ length: 3 }, (_, i) => `Compliance and Governance ${i + 1}`),
@@ -162,10 +176,23 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     "DISASTER RECOVERY": Array.from({ length: 3 }, (_, i) => `Disaster Recovery and Business Continuity ${i + 1}`)
   };
 
-  const itReadinessScores = Object.entries(itReadinessCategories).map(([category, keys]) => ({
-    category,
-    score: calculatePercentageScore(keys.map(key => Number(itOfficeData?.[key] || 0)))
-  }));
+  const itReadinessScores = Object.entries(itReadinessCategories).map(([category, keys]) => {
+    const scores = keys.map(key => Number(itOfficeData?.[key] || 0));
+    const categoryScore = calculatePercentageScore(scores);
+   
+    return {
+      category,
+      score: categoryScore
+    };
+  });
+
+  let itReadinessScores2 = 0
+  itReadinessScores.map((item: any) => itReadinessScores2 += item.score);
+
+  // console.log('IT Readiness Scores:', itReadinessScores);
+
+  // itReadinessScores2 = itReadinessScores2/21
+  // console.log('IT Readiness Scores:', itReadinessScores2);
 
   // Calculate Change Management scores using only IT Office data
   const changeManagementCategories = {
@@ -194,6 +221,10 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     )
   );
 
+  console.log("digitalSkillsAverage :" ,digitalSkillsAverage)
+
+
+
   const categoryAverages = combinedScores.techReadiness.categories.map((cat: any) => ({
     ...cat,
     average: cat.average / combinedScores.techReadiness.count,
@@ -202,6 +233,10 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
       score: score.score / combinedScores.techReadiness.count
     }))
   }));
+
+  console.log("categoryAverages :" ,categoryAverages)
+
+ 
 
   // Calculate final TRI Score
   const optimismScore = categoryAverages.find((item: any) => item.category === "OPTIMISM")?.average || 0;
@@ -238,7 +273,13 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
       categories: changeManagementScores,
       average: changeManagementAverage
     },
-    totalScore: Math.round(totalScore * 100) / 100
+    totalScore: Math.round(totalScore * 100) / 100,
+    componentScores: {
+      digitalSkills: Math.round(digitalSkillsAverage * 100) / 100,
+      techReadiness: Math.round(triScore * 100) / 100,
+      itReadiness: Math.round(itReadinessAverage * 100) / 100,
+      changeManagement: Math.round(changeManagementAverage * 100) / 100
+    }
   };
 };
 
@@ -277,6 +318,7 @@ const assData = [
       "IT POLICIES AND PROCEDURES",
       "RISK MANAGEMENT",
       "IT PERFORMANCE MEASUREMENT AND REPORTING",
+      "IT INVESTMENT MANAGEMENT",
       "VENDOR MANAGEMENT",
       "IT SECURITY AND COMPLIANCE",
       "ICT ORGANIZATIONAL STRUCTURE AND SKILLS",
@@ -285,6 +327,7 @@ const assData = [
       "SERVERS AND STORAGE",
       "VIRTUALIZATION",
       "DATA BACKUP AND RECOVERY",
+      "SCALABILITY AND ELASTICITY",
       "SECURITY MEASURES",
       "MONITORING AND PERFORMANCE",
       "COMPLIANCE AND GOVERNANCE",
@@ -313,38 +356,37 @@ const assData = [
 function About() {
   const { lguName } = useParams();
   const location = useLocation();
-  const [lguInfo, setLguInfo] = useState<LGUInfo | null>(null);
+  const [lguInfo, setLguInfo] = useState<any>(null);
   const [score, setScore] = useState(0);
   const [activeTab, setActiveTab] = useState('About');
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [detailedScores, setDetailedScores] = useState<any>(null);
 
-  // Update the useEffect hook
+  // Update the useEffect to use the new scores
   useEffect(() => {
     if (location.state?.score) setScore(location.state.score);
     
     const selectedLgu = lguName || location.state?.lguName;
     if (selectedLgu && Data) {
-      const info:any = Data.Info.find(item => 
+      const info: any = Data.Info.find(item => 
         item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
       );
-      const info2:any = Data["Mayors Office"].find(item => 
+      const info2: any = Data["Mayors Office"].find(item => 
         item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
       );
+      
       if (info) {
-        setLguInfo({...info,...info2});
-
-        console.log({...info,...info2});
+        setLguInfo({...info, ...info2});
         
         // Calculate scores across all offices
         const scores = calculateLGUDetailedScores(selectedLgu, ["Mayors Office", "Other Offices", "HR Office", "IT Office"]);
-
-        console.log(scores);
+        
         if (scores) {
-
-
           setDetailedScores(scores);
+          // Use the new total score calculation
           setScore(scores.totalScore);
+          
+          console.log('Component Scores:', scores.componentScores);
         }
       }
     }
@@ -361,6 +403,9 @@ function About() {
       </div>
     );
   }
+
+
+  console.log()
 
   // Update the renderAssessmentContent function to handle the new sections
   const renderAssessmentContent = () => (
@@ -422,32 +467,32 @@ function About() {
   );
 
   return (
-    <div className="min-h-full w-full flex items-center justify-center">
-      <div className="p-5 w-[95%] flex flex-col bg-card/25 border border-border rounded-lg">
+    <div className="min-h-full w-full py-10 flex items-center justify-center">
+      <div className="p-5 h-full  w-[95%] flex flex-col bg-card/25 border border-border border-b-0 rounded-lg">
         <h1 className="py-4 px-2 text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
           {`${lguInfo["LGU Name"]}, ${lguInfo.Province}`}
         </h1>
 
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex relative  justify-between">
-            <div className="w-[80%]">
-              <div className="grid grid-cols-3 gap-6">
-                <div className="space-y-4">
-                  <InfoCard label="Municipality" value={lguInfo["LGU Name"]} />
+          <div className="flex relative  justify-between md:items-end items-center md:flex-col">
+            <div className="w-[80%] md:w-full ">
+              <div className="grid grid-cols-3  gap-6">
+                
+                  <InfoCard span="2" label="Municipality" value={lguInfo["LGU Name"]} /><InfoCard label="Income Class" value={lguInfo["Income Class"]} />
                   <InfoCard label="Mayor" value={lguInfo.Mayor} />
                   <InfoCard label="Vice Mayor" value={lguInfo["Vice Mayor"]} />
                  
 
-                </div>
-                <div className="space-y-4">
-                <InfoCard label="Income Class" value={lguInfo["Income Class"]} />
+               
+                
+                
                   {/* <InfoCard label="Population" value={} /> */}
                   <InfoCard label="Population" value={lguInfo["No. of Population"]} />
                   <InfoCard label="Barangays" value={lguInfo["No. of Barangays"]} />
 
 
                  
-                </div>
+               
                 <div>
                 <InfoCard label="Location" 
                     value={`${lguInfo.Latitude}° N, ${lguInfo.Longitude}° E`} 
@@ -455,18 +500,18 @@ function About() {
                 </div>
               </div>
             </div>
-            <h1 className=' absolute right-0 bottom-0 font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
+            <h1 className=' absolute right-0 bottom-0 md:left-0 font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
             <ScoreCircle score={Math.round(score)} />
           </div>
         </div>
 
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex">
+        <div className="border-b w-[50%] border-gray-200">
+          <nav className="flex">
             {['About', 'Assessment', 'Attachments'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`mr-8 py-4 px-1 ${
+                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${
                   activeTab === tab
                     ? 'border-b-2 border-red-500 text-red-500 font-medium'
                     : 'text-gray-500 hover:text-gray-700 border-transparent'
@@ -478,11 +523,11 @@ function About() {
           </nav>
         </div>
 
-        <div className="py-6 w-[30%]">
+        <div className="py-4 md:py-6 w-[50%] md:w-full">
           {activeTab === 'About' && (
             <div className="flex flex-col md:flex-row">
-              <div className="w-full pr-6">
-                <p className="mb-4">{lguInfo.descriptioon}</p>
+              <div className="w-full md:w-[70%] pr-0 md:pr-6">
+                <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
               </div>
             </div>
           )}
