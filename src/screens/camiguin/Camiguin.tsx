@@ -4,6 +4,7 @@ import { Pie, Line } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 ;
 import Dashboard from '@/components/chart/Maturity';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 import rawData from './../../assets/data/eReadinessSurveyData.json';
 const Data: any = rawData;
@@ -396,24 +397,47 @@ function Camiguin() {
           
           {/* Right side - Charts */}
           <div className="w-[70%] space-y-4">
+
+            
+          <Dashboard
+        data={filteredData } 
+        title="Digital Skills Card Full Width" 
+        gridColsBase={1}
+        
+      />
             {/* Pie Chart */}
             <div className="bg-white p-4 border border-gray-200 rounded-lg">
               <h2 className="text-lg font-medium mb-4">LGUs Assessment Scores</h2>
               <div className="h-[300px] flex justify-center">
-                <Pie 
-                  data={pieData} 
-                  options={{
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        labels: {
-                          boxWidth: 12
-                        }
-                      }
-                    }
-                  }}
-                />
+              <Pie 
+  data={pieData} 
+  options={{
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          boxWidth: 12
+        }
+      },
+      // Enable the plugin specifically for this chart
+      datalabels: {
+        display: true,
+        color: '#fff',
+        font: {
+          weight: 'bold',
+          size: 10
+        },
+        formatter: (value) => {
+          return `${Math.round(value)}%`;
+        },
+        align: 'center',
+        anchor: 'center'
+      }
+    }
+  }}
+  plugins={[ChartDataLabels]} // Add plugin locally
+/>
               </div>
             </div>
             
@@ -458,12 +482,6 @@ function Camiguin() {
               </div>
             </div>
 
-            <Dashboard
-        data={filteredData } 
-        title="Digital Skills Card Full Width" 
-        gridColsBase={1}
-        
-      />
           </div>
         </div>
       </div>

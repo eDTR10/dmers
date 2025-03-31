@@ -48,7 +48,7 @@ function App() {
         {/* Sidebar Navigation */}
         <nav className={`
           z-40 bg-[#0036C5] border-r-2 
-          w-[280px] h-full md:absolute relative
+          w-[20vw] h-full md:absolute relative
           transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : ' fixed -translate-x-full'}
         `}>

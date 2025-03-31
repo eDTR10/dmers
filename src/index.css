@@ -20,6 +20,7 @@
   }
 
 :root {
+
   font-family: 'Gilroy-Medium', sans-serif;
  
 }
@@ -27,7 +28,12 @@
 body{
   font-family: 'Gilroy-Medium', sans-serif;
 }
-
+@media screen and (-webkit-min-device-pixel-ratio: 2),
+       screen and (min-resolution: 192dpi) {
+  :root {
+    font-size: 8px;
+  }
+}
 
 
 @layer base {
