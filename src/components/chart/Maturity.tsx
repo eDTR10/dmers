@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+// import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
 // Register Chart.js components
@@ -21,7 +21,6 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ChartDataLabels 
 );
 
 interface CardProps {
@@ -251,14 +250,13 @@ const Dashboard: React.FC<DashboardProps> = ({
     let changeReadinessCount = 0;
   
     allOffices.forEach((office: any) => {
-      if (office["OFFICE SELECTION"] === "MIS\/IT") {
+      if (office["OFFICE SELECTION"] === "MIS\/IT" ) {
         // Convert values to numbers and sum only if they're valid numbers
         const values = [
-          Number(office["Costs or Financial 1"]) || 0,
-          Number(office["Costs or Financial 2"]) || 0,
-          Number(office["Costs or Financial 3"]) || 0,
-          Number(office["Costs or Financial 4"]) || 0,
-          Number(office["Costs or Financial 5"]) || 0,
+          Number(office["BASIC IT READINESS 1"]) || 0,
+          Number(office["BASIC IT READINESS 2"]) || 0,
+          Number(office["BASIC IT READINESS 3"]) || 0,
+          Number(office["BASIC IT READINESS 4"]) || 0
 
 
 
