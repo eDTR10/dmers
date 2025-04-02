@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import Data from './../../assets/data/eReadinessSurveyData.json';
 
-
-
-const InfoCard = ({ label, value,span }:any) => (
-  <div className={`bg-gray-50 p-4 rounded-lg border border-border col-span-${span ?span:1}`} >
+const InfoCard = ({ label, value, span }: any) => (
+  <div className={`bg-gray-50 p-4 rounded-lg border border-border col-span-${span ? span : 1}`}>
     <div className="text-sm text-gray-700 mb-1">{label}</div>
     <div className="font-bold text-lg">{value}</div>
   </div>
@@ -18,9 +16,13 @@ const ScoreCircle = ({ score }: { score: number }) => (
       <svg className="w-full h-full transform -rotate-90">
         <circle cx="80" cy="80" r="70" fill="none" stroke="#ecc216" strokeWidth="8" />
         <circle
-          cx="80" cy="80" r="70"
-          fill="none" stroke="#0036C5"
-          strokeWidth="8" strokeLinecap="round"
+          cx="80"
+          cy="80"
+          r="70"
+          fill="none"
+          stroke="#0036C5"
+          strokeWidth="8"
+          strokeLinecap="round"
           strokeDasharray={`${(score / 100) * 439.6} 439.6`}
         />
       </svg>
@@ -33,22 +35,16 @@ const ScoreCircle = ({ score }: { score: number }) => (
   </div>
 );
 
-// Add helper functions for score calculation
+// Update the calculation function
 const calculatePercentageScore = (responses: number[]) => {
-  // Filter out null/undefined responses
-  const validResponses = responses.filter(val => val !== null && val !== undefined);
-  
-  // If no valid responses, return 0
-  if (validResponses.length === 0) return 0;
-  
-  // Calculate total possible score (5 points per question)
-  const totalPossibleScore = validResponses.length * 5;
-  
-  // Sum up actual scores
-  const actualScore = validResponses.reduce((sum, value) => sum + value, 0);
-  
-  // Calculate percentage: (actualScore / totalPossibleScore) × 100
-  return (actualScore / totalPossibleScore) * 100;
+  // Sum all values
+  const total = responses.reduce((sum, value) => sum + Number(value || 0), 0);
+
+  // Calculate maximum possible score (length * 5)
+  const maxPossible = responses.length * 5;
+
+  // Calculate percentage
+  return (total / maxPossible) * 100;
 };
 
 const calculateAverage = (values: number[]) => {
@@ -60,43 +56,47 @@ const scaleToPercentage = (value: number) => {
   return ((value - 1) / 5) * 100;
 };
 
-// Update the calculateLGUDetailedScores function to properly calculate IT Readiness scores
+// Update the Digital Skills calculation inside calculateLGUDetailedScores
 const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   // Get IT Office data specifically for IT Readiness and Change Management
-  const itOfficeData:any = Data["IT Office"].find(data => data["LGU Name"] === lguName);
-  
-  // Get data from all offices for other assessments
-  let Datas:any = Data
-  let officesData:any = offices.map((office:any) => 
-  
-    Datas[office].filter((data:any)=>data["LGU Name"] === lguName)
-  )
+  const itOfficeData: any = Data["IT Office"].find(data => data["LGU Name"] === lguName);
 
-  officesData = Object.values(officesData).flat()
-  
- 
-  
+  // Get data from all offices for other assessments
+  let Datas: any = Data;
+  let officesData: any = offices.map((office: any) =>
+    Datas[office].filter((data: any) => data["LGU Name"] === lguName)
+  );
+
+  officesData = Object.values(officesData).flat();
+
   console.log('Offices Data:', officesData);
   if (!officesData.length) return null;
-  // Combine scores from all offices for Digital Skills and Tech Readiness
-  const combinedScores = officesData.reduce((acc:any, data:any) => {
-    // Digital Skills and Tech Readiness calculations remain the same
-    // Digital Skills Assessment
-    const digitalSkillsKeys = Array.from({ length: 10 }, (_, i) => `Question ${i + 1} DigitalSkillsAssessment`);
-    console.log("Adasdas----")
 
-    console.log(data)
-    
-    
-    const digitalSkillsScores = digitalSkillsKeys.map(key => ({
+  // Get all responses for each Digital Skills question
+  const digitalSkillsScores = Array.from({ length: 10 }, (_, questionIndex) => {
+    const key = `Question ${questionIndex + 1} DigitalSkillsAssessment`;
+
+    // Collect all responses for this question across all offices
+    const responses = officesData.map(data => Number(data[key] || 0));
+
+    // Calculate score using the new method
+    const total = responses.reduce((sum, value) => sum + value, 0);
+    const maxPossible = responses.length * 5;
+    const score = (total / maxPossible) * 100;
+
+    return {
       question: key,
-      data: data[key],
-      score: scaleToPercentage(Number(data[key] || 0))
-    }));
+      responses, // Store raw responses for reference
+      score: score
+    };
+  });
 
+  const digitalSkillsAverage = calculateAverage(
+    digitalSkillsScores.map(item => item.score)
+  );
 
-
-    // Technology Readiness Index
+  // Combine scores from all offices for Technology Readiness
+  const combinedScores = officesData.reduce((acc: any, data: any) => {
     const categories = {
       'OPTIMISM': Array.from({ length: 10 }, (_, i) => `Optimism ${i + 1}`),
       'INNOVATIVENESS': Array.from({ length: 7 }, (_, i) => `Innovativeness ${i + 1}`),
@@ -112,30 +112,16 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
       return {
         category,
         scores,
-        average: calculateAverage(scores.map(item => item.score) ) 
+        average: calculateAverage(scores.map(item => item.score))
       };
     });
-
-
-  
-
-    // Accumulate scores
-    if (!acc.digitalSkills) {
-      acc.digitalSkills = { scores: digitalSkillsScores, count: 1 };
-    } else {
-      acc.digitalSkills.scores = acc.digitalSkills.scores.map((score:any, index:any) => ({
-        question: score.question,
-        score: score.score + digitalSkillsScores[index].score
-      }));
-      acc.digitalSkills.count++;
-    }
 
     if (!acc.techReadiness) {
       acc.techReadiness = { categories: categoryScores, count: 1 };
     } else {
-      acc.techReadiness.categories = acc.techReadiness.categories.map((cat:any, index:any) => ({
+      acc.techReadiness.categories = acc.techReadiness.categories.map((cat: any, index: any) => ({
         category: cat.category,
-        scores: cat.scores.map((score:any, i:any) => ({
+        scores: cat.scores.map((score: any, i: any) => ({
           question: score.question,
           score: score.score + categoryScores[index].scores[i].score
         })),
@@ -147,9 +133,8 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     return acc;
   }, {} as any);
 
+  console.log("Combine Scores:", combinedScores);
 
-  console.log("Combine Scores:", combinedScores )
-  
   // Calculate IT Readiness scores using only IT Office data
   const itReadinessCategories = {
     "BASIC IT READINESS": Array.from({ length: 4 }, (_, i) => `BASIC IT READINESS ${i + 1}`),
@@ -179,20 +164,20 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   const itReadinessScores = Object.entries(itReadinessCategories).map(([category, keys]) => {
     const scores = keys.map(key => Number(itOfficeData?.[key] || 0));
     const categoryScore = calculatePercentageScore(scores);
-   
+
     return {
       category,
       score: categoryScore
     };
   });
 
-  let itReadinessScores2 = 0
+  let itReadinessScores2 = 0;
   itReadinessScores.map((item: any) => itReadinessScores2 += item.score);
 
-  // console.log('IT Readiness Scores:', itReadinessScores);
+  console.log('IT Readiness Scores:', itReadinessScores);
 
-  // itReadinessScores2 = itReadinessScores2/21
-  // console.log('IT Readiness Scores:', itReadinessScores2);
+  itReadinessScores2 = itReadinessScores2 / 21;
+  console.log('IT Readiness Scores:', itReadinessScores2);
 
   // Calculate Change Management scores using only IT Office data
   const changeManagementCategories = {
@@ -215,16 +200,6 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   }));
 
   // Calculate averages
-  const digitalSkillsAverage = calculateAverage(
-    combinedScores.digitalSkills.scores.map((item: any) => 
-      item.score / combinedScores.digitalSkills.count
-    )
-  );
-
-  console.log("digitalSkillsAverage :" ,digitalSkillsAverage)
-
-
-
   const categoryAverages = combinedScores.techReadiness.categories.map((cat: any) => ({
     ...cat,
     average: cat.average / combinedScores.techReadiness.count,
@@ -234,16 +209,14 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     }))
   }));
 
-  console.log("categoryAverages :" ,categoryAverages)
-
- 
+  console.log("categoryAverages :", categoryAverages);
 
   // Calculate final TRI Score
   const optimismScore = categoryAverages.find((item: any) => item.category === "OPTIMISM")?.average || 0;
   const innovativenessScore = categoryAverages.find((item: any) => item.category === "INNOVATIVENESS")?.average || 0;
   const discomfortScore = categoryAverages.find((item: any) => item.category === "DISCOMFORT")?.average || 0;
   const insecurityScore = categoryAverages.find((item: any) => item.category === "INSECURITY")?.average || 0;
-  
+
   const triScore = (optimismScore + innovativenessScore + (100 - discomfortScore) + (100 - insecurityScore)) / 4;
 
   // Calculate IT Readiness and Change Management averages
@@ -255,10 +228,7 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
 
   return {
     digitalSkills: {
-      scores: combinedScores.digitalSkills.scores.map((item: any) => ({
-        question: item.question,
-        score: item.score / combinedScores.digitalSkills.count
-      })),
+      scores: digitalSkillsScores,
       average: digitalSkillsAverage
     },
     technologyReadiness: {
@@ -365,27 +335,27 @@ function About() {
   // Update the useEffect to use the new scores
   useEffect(() => {
     if (location.state?.score) setScore(location.state.score);
-    
+
     const selectedLgu = lguName || location.state?.lguName;
     if (selectedLgu && Data) {
-      const info: any = Data.Info.find(item => 
+      const info: any = Data.Info.find(item =>
         item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
       );
-      const info2: any = Data["Mayors Office"].find(item => 
+      const info2: any = Data["Mayors Office"].find(item =>
         item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
       );
-      
+
       if (info) {
-        setLguInfo({...info, ...info2});
-        
+        setLguInfo({ ...info, ...info2 });
+
         // Calculate scores across all offices
         const scores = calculateLGUDetailedScores(selectedLgu, ["Mayors Office", "Other Offices", "HR Office", "IT Office"]);
-        
+
         if (scores) {
           setDetailedScores(scores);
           // Use the new total score calculation
           setScore(scores.totalScore);
-          
+
           console.log('Component Scores:', scores.componentScores);
         }
       }
@@ -404,8 +374,7 @@ function About() {
     );
   }
 
-
-  console.log()
+  console.log();
 
   // Update the renderAssessmentContent function to handle the new sections
   const renderAssessmentContent = () => (
@@ -414,7 +383,7 @@ function About() {
         <div key={section.title} className="border rounded-lg overflow-hidden">
           <button
             onClick={() => {
-              setExpandedSections(prev => 
+              setExpandedSections(prev =>
                 prev.includes(section.title)
                   ? prev.filter(title => title !== section.title)
                   : [...prev, section.title]
@@ -427,12 +396,12 @@ function About() {
               {expandedSections.includes(section.title) ? '−' : '+'}
             </span>
           </button>
-          
+
           {expandedSections.includes(section.title) && (
             <ul className="p-4 bg-white space-y-2">
               {section.data.map((item, index) => {
                 let score;
-                switch(section.title) {
+                switch (section.title) {
                   case "DIGITAL SKILLS ASSESSMENT":
                     score = detailedScores.digitalSkills.scores[index]?.score;
                     break;
@@ -448,9 +417,9 @@ function About() {
                   default:
                     score = 0;
                 }
-                
+
                 return (
-                  <li 
+                  <li
                     key={index}
                     className="flex items-center justify-between text-gray-700 hover:text-[#0036C5] transition-colors p-2"
                   >
@@ -477,25 +446,16 @@ function About() {
           <div className="flex relative  justify-between md:items-end items-center md:flex-col">
             <div className="w-[80%] md:w-full ">
               <div className="grid grid-cols-3  gap-6">
-                
-                  <InfoCard span="2" label="Municipality" value={lguInfo["LGU Name"]} /><InfoCard label="Income Class" value={lguInfo["Income Class"]} />
-                  <InfoCard label="Mayor" value={lguInfo.Mayor} />
-                  <InfoCard label="Vice Mayor" value={lguInfo["Vice Mayor"]} />
-                 
-
-               
-                
-                
-                  {/* <InfoCard label="Population" value={} /> */}
-                  <InfoCard label="Population" value={lguInfo["No. of Population"]} />
-                  <InfoCard label="Barangays" value={lguInfo["No. of Barangays"]} />
-
-
-                 
-               
+                <InfoCard span="2" label="Municipality" value={lguInfo["LGU Name"]} />
+                <InfoCard label="Income Class" value={lguInfo["Income Class"]} />
+                <InfoCard label="Mayor" value={lguInfo.Mayor} />
+                <InfoCard label="Vice Mayor" value={lguInfo["Vice Mayor"]} />
+                <InfoCard label="Population" value={lguInfo["No. of Population"]} />
+                <InfoCard label="Barangays" value={lguInfo["No. of Barangays"]} />
                 <div>
-                <InfoCard label="Location" 
-                    value={`${lguInfo.Latitude}° N, ${lguInfo.Longitude}° E`} 
+                  <InfoCard
+                    label="Location"
+                    value={`${lguInfo.Latitude}° N, ${lguInfo.Longitude}° E`}
                   />
                 </div>
               </div>
