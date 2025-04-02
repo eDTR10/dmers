@@ -3,9 +3,210 @@ import { useParams, useLocation } from 'react-router-dom';
 import Data from './../../assets/data/eReadinessSurveyData.json';
 
 
+function About() {
+  const { lguName } = useParams();
+  const location = useLocation();
+  const [lguInfo, setLguInfo] = useState<any>(null);
+  const [score, setScore] = useState(0);
+  const [activeTab, setActiveTab] = useState('About');
+  const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [detailedScores, setDetailedScores] = useState<any>(null);
+  const [digitalScore,setDigitalScore] = useState<any>({});
 
-const InfoCard = ({ label, value,span }:any) => (
-  <div className={`bg-gray-50 p-4 rounded-lg border border-border col-span-${span ?span:1}`} >
+  // Update the useEffect to use the new scores
+  useEffect(() => {
+    if (location.state?.score) setScore(location.state.score);
+
+    const selectedLgu = lguName || location.state?.lguName;
+    if (selectedLgu && Data) {
+      const info: any = Data.Info.find(item =>
+        item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
+      );
+      const info2: any = Data["Mayors Office"].find(item =>
+        item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
+      );
+
+      if (info) {
+        setLguInfo({ ...info, ...info2 });
+
+        // Calculate scores across all offices
+        const scores = calculateLGUDetailedScores(selectedLgu, ["Mayors Office", "Other Offices", "HR Office", "IT Office"]);
+
+        if (scores) {
+          setDetailedScores(scores);
+          // Use the new total score calculation
+          setScore(scores.totalScore);
+
+          setDigitalScore(scores.componentScores)
+          
+
+          console.log('Component Scores:', scores.componentScores.digitalSkills);
+        }
+      }
+    }
+  }, [lguName, location]);
+
+  function Percentage(data:any){
+    switch (data) {
+      case "DIGITAL SKILLS ASSESSMENT":
+        return digitalScore.digitalSkills;
+      case "TECHNOLOGY READINESS INDEX":
+        return digitalScore.techReadiness;
+      case "IT READINESS ASSESSMENT":
+        return digitalScore.itReadiness;
+      case "ICT CHANGE MANAGEMENT":
+        return digitalScore.changeManagement;
+        
+       
+      default:
+        break;
+    }
+  }
+
+
+  if (!lguInfo) {
+    return (
+      <div className="min-h-full w-full flex items-center justify-center">
+        <div className="p-5 w-[95%] flex flex-col bg-card/25 border border-border rounded-lg">
+          <h1 className="py-4 px-2 text-center font-bold text-xl border text-[#0036C5] border-[#0036C5]">
+            LGU Information Not Found
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
+  console.log();
+
+  // Update the renderAssessmentContent function to handle the new sections
+  const renderAssessmentContent = () => (
+    <div className="space-y-4">
+      {detailedScores && assData.map((section) => (
+        <div key={section.title} className="border rounded-lg overflow-hidden">
+          <button
+            onClick={() => {
+              setExpandedSections(prev =>
+                prev.includes(section.title)
+                  ? prev.filter(title => title !== section.title)
+                  : [...prev, section.title]
+              );
+            }}
+            className="w-full p-4 flex justify-between items-center bg-[#0036C5] text-white hover:bg-[#002799] transition-colors"
+          >
+            <h3 className="text-xl font-semibold">{section.title}</h3>
+            <span className="text-2xl">
+              { Percentage(section.title)}% &nbsp; &nbsp;
+              {expandedSections.includes(section.title) ? '−' : '+'}
+            </span>
+          </button>
+
+          {expandedSections.includes(section.title) && (
+            <ul className="p-4 bg-white space-y-2">
+              {section.data.map((item, index) => {
+                let score;
+                switch (section.title) {
+                  case "DIGITAL SKILLS ASSESSMENT":
+                    score = detailedScores.digitalSkills.scores[index]?.score;
+                    break;
+                  case "TECHNOLOGY READINESS INDEX":
+                    score = detailedScores.technologyReadiness.categories[index]?.average;
+                    break;
+                  case "IT READINESS ASSESSMENT":
+                    score = detailedScores.itReadiness?.categories[index]?.score;
+                    break;
+                  case "ICT CHANGE MANAGEMENT":
+                    score = detailedScores.changeManagement?.categories[index]?.score;
+                    break;
+                  default:
+                    score = 0;
+                }
+
+                return (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between text-gray-700 hover:text-[#0036C5] transition-colors p-2"
+                  >
+                    <span>{item}</span>
+                    <span className="font-semibold">{score?.toFixed(2)}%</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="min-h-full w-full py-10 flex items-center justify-center">
+      <div className="p-5 h-full  w-[95%] flex flex-col bg-card/25 border border-border border-b-0 rounded-lg">
+        <h1 className="py-4 px-2 text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
+          {`${lguInfo["LGU Name"]}, ${lguInfo.Province}`}
+        </h1>
+
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex relative  justify-between md:items-end items-center md:flex-col">
+            <div className="w-[80%] md:w-full ">
+              <div className="grid grid-cols-3  gap-6">
+                <InfoCard span="2" label="Municipality" value={lguInfo["LGU Name"]} />
+                <InfoCard label="Income Class" value={lguInfo["Income Class"]} />
+                <InfoCard label="Mayor" value={lguInfo.Mayor} />
+                <InfoCard label="Vice Mayor" value={lguInfo["Vice Mayor"]} />
+                <InfoCard label="Population" value={lguInfo["No. of Population"]} />
+                <InfoCard label="Barangays" value={lguInfo["No. of Barangays"]} />
+                <div>
+                  <InfoCard
+                    label="Location"
+                    value={`${lguInfo.Latitude}° N, ${lguInfo.Longitude}° E`}
+                  />
+                </div>
+              </div>
+            </div>
+            <h1 className=' absolute right-0 bottom-0 md:left-0 font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
+            <ScoreCircle score={Math.round(score)} />
+          </div>
+        </div>
+
+        <div className="border-b w-[50%] border-gray-200">
+          <nav className="flex">
+            {['About', 'Assessment', 'Attachments'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${
+                  activeTab === tab
+                    ? 'border-b-2 border-red-500 text-red-500 font-medium'
+                    : 'text-gray-500 hover:text-gray-700 border-transparent'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="py-4 md:py-6 w-[50%] md:w-full">
+          {activeTab === 'About' && (
+            <div className="flex flex-col md:flex-row">
+              <div className="w-full md:w-[70%] pr-0 md:pr-6">
+                <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
+              </div>
+            </div>
+          )}
+          {activeTab === 'Assessment' && renderAssessmentContent()}
+          {activeTab === 'Attachments' && (
+            <h3 className="text-xl font-semibold mb-4">Attachments</h3>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+const InfoCard = ({ label, value, span }: any) => (
+  <div className={`bg-gray-50 p-4 rounded-lg border border-border col-span-${span ? span : 1}`}>
     <div className="text-sm text-gray-700 mb-1">{label}</div>
     <div className="font-bold text-lg">{value}</div>
   </div>
@@ -18,9 +219,13 @@ const ScoreCircle = ({ score }: { score: number }) => (
       <svg className="w-full h-full transform -rotate-90">
         <circle cx="80" cy="80" r="70" fill="none" stroke="#ecc216" strokeWidth="8" />
         <circle
-          cx="80" cy="80" r="70"
-          fill="none" stroke="#0036C5"
-          strokeWidth="8" strokeLinecap="round"
+          cx="80"
+          cy="80"
+          r="70"
+          fill="none"
+          stroke="#0036C5"
+          strokeWidth="8"
+          strokeLinecap="round"
           strokeDasharray={`${(score / 100) * 439.6} 439.6`}
         />
       </svg>
@@ -33,22 +238,16 @@ const ScoreCircle = ({ score }: { score: number }) => (
   </div>
 );
 
-// Add helper functions for score calculation
+// Update the calculation function
 const calculatePercentageScore = (responses: number[]) => {
-  // Filter out null/undefined responses
-  const validResponses = responses.filter(val => val !== null && val !== undefined);
-  
-  // If no valid responses, return 0
-  if (validResponses.length === 0) return 0;
-  
-  // Calculate total possible score (5 points per question)
-  const totalPossibleScore = validResponses.length * 5;
-  
-  // Sum up actual scores
-  const actualScore = validResponses.reduce((sum, value) => sum + value, 0);
-  
-  // Calculate percentage: (actualScore / totalPossibleScore) × 100
-  return (actualScore / totalPossibleScore) * 100;
+  // Sum all values
+  const total = responses.reduce((sum, value) => sum + Number(value || 0), 0);
+
+  // Calculate maximum possible score (length * 5)
+  const maxPossible = responses.length * 5;
+
+  // Calculate percentage
+  return (total / maxPossible) * 100;
 };
 
 const calculateAverage = (values: number[]) => {
@@ -56,100 +255,88 @@ const calculateAverage = (values: number[]) => {
   return validValues.length ? validValues.reduce((a, b) => a + b, 0) / validValues.length : 0;
 };
 
-const scaleToPercentage = (value: number) => {
-  return ((value - 1) / 5) * 100;
-};
 
-// Update the calculateLGUDetailedScores function to properly calculate IT Readiness scores
+
+// Update the Digital Skills calculation inside calculateLGUDetailedScores
 const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   // Get IT Office data specifically for IT Readiness and Change Management
-  const itOfficeData:any = Data["IT Office"].find(data => data["LGU Name"] === lguName);
-  
-  // Get data from all offices for other assessments
-  let Datas:any = Data
-  let officesData:any = offices.map((office:any) => 
-  
-    Datas[office].filter((data:any)=>data["LGU Name"] === lguName)
-  )
+  const itOfficeData: any = Data["IT Office"].find(data => data["LGU Name"] === lguName);
 
-  officesData = Object.values(officesData).flat()
-  
- 
-  
+  // Get data from all offices for other assessments
+  let Datas: any = Data;
+  let officesData: any = offices.map((office: any) =>
+    Datas[office].filter((data: any) => data["LGU Name"] === lguName)
+  );
+
+  officesData = Object.values(officesData).flat();
+
   console.log('Offices Data:', officesData);
   if (!officesData.length) return null;
-  // Combine scores from all offices for Digital Skills and Tech Readiness
-  const combinedScores = officesData.reduce((acc:any, data:any) => {
-    // Digital Skills and Tech Readiness calculations remain the same
-    // Digital Skills Assessment
-    const digitalSkillsKeys = Array.from({ length: 10 }, (_, i) => `Question ${i + 1} DigitalSkillsAssessment`);
-    console.log("Adasdas----")
 
-    console.log(data)
-    
-    
-    const digitalSkillsScores = digitalSkillsKeys.map(key => ({
+  // Get all responses for each Digital Skills question
+  const digitalSkillsScores = Array.from({ length: 10 }, (_, questionIndex) => {
+    const key = `Question ${questionIndex + 1} DigitalSkillsAssessment`;
+
+    // Collect all responses for this question across all offices
+    const responses = officesData.map((data:any) => Number(data[key] || 0));
+
+    // Calculate score using the new method
+    const total = responses.reduce((sum:any, value:any) => sum + value, 0);
+    const maxPossible = responses.length * 5;
+    const score = (total / maxPossible) * 100;
+
+    return {
       question: key,
-      data: data[key],
-      score: scaleToPercentage(Number(data[key] || 0))
-    }));
-
-
-
-    // Technology Readiness Index
-    const categories = {
-      'OPTIMISM': Array.from({ length: 10 }, (_, i) => `Optimism ${i + 1}`),
-      'INNOVATIVENESS': Array.from({ length: 7 }, (_, i) => `Innovativeness ${i + 1}`),
-      'DISCOMFORT': Array.from({ length: 10 }, (_, i) => `Discomfort ${i + 1}`),
-      'INSECURITY': Array.from({ length: 9 }, (_, i) => `Insecurity ${i + 1}`)
+      responses, // Store raw responses for reference
+      score: score
     };
+  });
 
-    const categoryScores = Object.entries(categories).map(([category, keys]) => {
-      const scores = keys.map(key => ({
-        question: key,
-        score: scaleToPercentage(Number(data[key] || 0))
-      }));
-      return {
-        category,
-        scores,
-        average: calculateAverage(scores.map(item => item.score) ) 
-      };
+  const digitalSkillsAverage = calculateAverage(
+    digitalSkillsScores.map(item => item.score)
+  );
+
+  // Helper function to calculate TRI scores
+  const calculateTRIScore = (category: string, questionCount: number) => {
+    // Get all responses for this category across all offices
+    const responses = officesData.flatMap((data:any) => {
+      return Array.from({ length: questionCount }, (_, i) => {
+        const key = `${category} ${i + 1}`;
+        return Number(data[key] || 0);
+      });
     });
 
+    // Calculate score like Python implementation
+    const total = responses.reduce((sum:any, value:any) => sum + value, 0);
+    console.log(category);
+    console.log('Responses:', responses);
+    console.log('Total:', total);
+    const maxPossible = responses.length * 5;
+    return (total / maxPossible) * 100;
+  };
 
-  
+  // Calculate scores for each TRI category
+  const optimismScore = calculateTRIScore('Optimism', 10);
+  const innovativenessScore = calculateTRIScore('Innovativeness', 7);
+  const discomfortScore = calculateTRIScore('Discomfort', 10);
+  const insecurityScore = calculateTRIScore('Insecurity', 9);
 
-    // Accumulate scores
-    if (!acc.digitalSkills) {
-      acc.digitalSkills = { scores: digitalSkillsScores, count: 1 };
-    } else {
-      acc.digitalSkills.scores = acc.digitalSkills.scores.map((score:any, index:any) => ({
-        question: score.question,
-        score: score.score + digitalSkillsScores[index].score
-      }));
-      acc.digitalSkills.count++;
-    }
+  // Create categories array for display
+  const triCategories = [
+    { category: 'OPTIMISM', average: optimismScore },
+    { category: 'INNOVATIVENESS', average: innovativenessScore },
+    { category: 'DISCOMFORT', average: discomfortScore },
+    { category: 'INSECURITY', average: insecurityScore }
+  ];
 
-    if (!acc.techReadiness) {
-      acc.techReadiness = { categories: categoryScores, count: 1 };
-    } else {
-      acc.techReadiness.categories = acc.techReadiness.categories.map((cat:any, index:any) => ({
-        category: cat.category,
-        scores: cat.scores.map((score:any, i:any) => ({
-          question: score.question,
-          score: score.score + categoryScores[index].scores[i].score
-        })),
-        average: cat.average + categoryScores[index].average
-      }));
-      acc.techReadiness.count++;
-    }
+  // Calculate final TRI score
+  const triScore = (
+    optimismScore + 
+    innovativenessScore + 
+    discomfortScore + 
+    insecurityScore
+  ) / 4;
 
-    return acc;
-  }, {} as any);
-
-
-  console.log("Combine Scores:", combinedScores )
-  
   // Calculate IT Readiness scores using only IT Office data
   const itReadinessCategories = {
     "BASIC IT READINESS": Array.from({ length: 4 }, (_, i) => `BASIC IT READINESS ${i + 1}`),
@@ -179,20 +366,20 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   const itReadinessScores = Object.entries(itReadinessCategories).map(([category, keys]) => {
     const scores = keys.map(key => Number(itOfficeData?.[key] || 0));
     const categoryScore = calculatePercentageScore(scores);
-   
+
     return {
       category,
       score: categoryScore
     };
   });
 
-  let itReadinessScores2 = 0
+  let itReadinessScores2 = 0;
   itReadinessScores.map((item: any) => itReadinessScores2 += item.score);
 
-  // console.log('IT Readiness Scores:', itReadinessScores);
+  console.log('IT Readiness Scores:', itReadinessScores);
 
-  // itReadinessScores2 = itReadinessScores2/21
-  // console.log('IT Readiness Scores:', itReadinessScores2);
+  itReadinessScores2 = itReadinessScores2 / 21;
+  console.log('IT Readiness Scores:', itReadinessScores2);
 
   // Calculate Change Management scores using only IT Office data
   const changeManagementCategories = {
@@ -215,36 +402,12 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   }));
 
   // Calculate averages
-  const digitalSkillsAverage = calculateAverage(
-    combinedScores.digitalSkills.scores.map((item: any) => 
-      item.score / combinedScores.digitalSkills.count
-    )
-  );
-
-  console.log("digitalSkillsAverage :" ,digitalSkillsAverage)
-
-
-
-  const categoryAverages = combinedScores.techReadiness.categories.map((cat: any) => ({
+  const categoryAverages = triCategories.map((cat: any) => ({
     ...cat,
-    average: cat.average / combinedScores.techReadiness.count,
-    scores: cat.scores.map((score: any) => ({
-      ...score,
-      score: score.score / combinedScores.techReadiness.count
-    }))
+    average: cat.average
   }));
 
-  console.log("categoryAverages :" ,categoryAverages)
-
- 
-
-  // Calculate final TRI Score
-  const optimismScore = categoryAverages.find((item: any) => item.category === "OPTIMISM")?.average || 0;
-  const innovativenessScore = categoryAverages.find((item: any) => item.category === "INNOVATIVENESS")?.average || 0;
-  const discomfortScore = categoryAverages.find((item: any) => item.category === "DISCOMFORT")?.average || 0;
-  const insecurityScore = categoryAverages.find((item: any) => item.category === "INSECURITY")?.average || 0;
-  
-  const triScore = (optimismScore + innovativenessScore + (100 - discomfortScore) + (100 - insecurityScore)) / 4;
+  console.log("categoryAverages :", categoryAverages);
 
   // Calculate IT Readiness and Change Management averages
   const itReadinessAverage = calculateAverage(itReadinessScores.map(cat => cat.score));
@@ -255,10 +418,7 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
 
   return {
     digitalSkills: {
-      scores: combinedScores.digitalSkills.scores.map((item: any) => ({
-        question: item.question,
-        score: item.score / combinedScores.digitalSkills.count
-      })),
+      scores: digitalSkillsScores,
       average: digitalSkillsAverage
     },
     technologyReadiness: {
@@ -353,192 +513,6 @@ const assData = [
   }
 ];
 
-function About() {
-  const { lguName } = useParams();
-  const location = useLocation();
-  const [lguInfo, setLguInfo] = useState<any>(null);
-  const [score, setScore] = useState(0);
-  const [activeTab, setActiveTab] = useState('About');
-  const [expandedSections, setExpandedSections] = useState<string[]>([]);
-  const [detailedScores, setDetailedScores] = useState<any>(null);
 
-  // Update the useEffect to use the new scores
-  useEffect(() => {
-    if (location.state?.score) setScore(location.state.score);
-    
-    const selectedLgu = lguName || location.state?.lguName;
-    if (selectedLgu && Data) {
-      const info: any = Data.Info.find(item => 
-        item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
-      );
-      const info2: any = Data["Mayors Office"].find(item => 
-        item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
-      );
-      
-      if (info) {
-        setLguInfo({...info, ...info2});
-        
-        // Calculate scores across all offices
-        const scores = calculateLGUDetailedScores(selectedLgu, ["Mayors Office", "Other Offices", "HR Office", "IT Office"]);
-        
-        if (scores) {
-          setDetailedScores(scores);
-          // Use the new total score calculation
-          setScore(scores.totalScore);
-          
-          console.log('Component Scores:', scores.componentScores);
-        }
-      }
-    }
-  }, [lguName, location]);
-
-  if (!lguInfo) {
-    return (
-      <div className="min-h-full w-full flex items-center justify-center">
-        <div className="p-5 w-[95%] flex flex-col bg-card/25 border border-border rounded-lg">
-          <h1 className="py-4 px-2 text-center font-bold text-xl border text-[#0036C5] border-[#0036C5]">
-            LGU Information Not Found
-          </h1>
-        </div>
-      </div>
-    );
-  }
-
-
-  console.log()
-
-  // Update the renderAssessmentContent function to handle the new sections
-  const renderAssessmentContent = () => (
-    <div className="space-y-4">
-      {detailedScores && assData.map((section) => (
-        <div key={section.title} className="border rounded-lg overflow-hidden">
-          <button
-            onClick={() => {
-              setExpandedSections(prev => 
-                prev.includes(section.title)
-                  ? prev.filter(title => title !== section.title)
-                  : [...prev, section.title]
-              );
-            }}
-            className="w-full p-4 flex justify-between items-center bg-[#0036C5] text-white hover:bg-[#002799] transition-colors"
-          >
-            <h3 className="text-xl font-semibold">{section.title}</h3>
-            <span className="text-2xl">
-              {expandedSections.includes(section.title) ? '−' : '+'}
-            </span>
-          </button>
-          
-          {expandedSections.includes(section.title) && (
-            <ul className="p-4 bg-white space-y-2">
-              {section.data.map((item, index) => {
-                let score;
-                switch(section.title) {
-                  case "DIGITAL SKILLS ASSESSMENT":
-                    score = detailedScores.digitalSkills.scores[index]?.score;
-                    break;
-                  case "TECHNOLOGY READINESS INDEX":
-                    score = detailedScores.technologyReadiness.categories[index]?.average;
-                    break;
-                  case "IT READINESS ASSESSMENT":
-                    score = detailedScores.itReadiness?.categories[index]?.score;
-                    break;
-                  case "ICT CHANGE MANAGEMENT":
-                    score = detailedScores.changeManagement?.categories[index]?.score;
-                    break;
-                  default:
-                    score = 0;
-                }
-                
-                return (
-                  <li 
-                    key={index}
-                    className="flex items-center justify-between text-gray-700 hover:text-[#0036C5] transition-colors p-2"
-                  >
-                    <span>{item}</span>
-                    <span className="font-semibold">{score?.toFixed(2)}%</span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
-  return (
-    <div className="min-h-full w-full py-10 flex items-center justify-center">
-      <div className="p-5 h-full  w-[95%] flex flex-col bg-card/25 border border-border border-b-0 rounded-lg">
-        <h1 className="py-4 px-2 text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
-          {`${lguInfo["LGU Name"]}, ${lguInfo.Province}`}
-        </h1>
-
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex relative  justify-between md:items-end items-center md:flex-col">
-            <div className="w-[80%] md:w-full ">
-              <div className="grid grid-cols-3  gap-6">
-                
-                  <InfoCard span="2" label="Municipality" value={lguInfo["LGU Name"]} /><InfoCard label="Income Class" value={lguInfo["Income Class"]} />
-                  <InfoCard label="Mayor" value={lguInfo.Mayor} />
-                  <InfoCard label="Vice Mayor" value={lguInfo["Vice Mayor"]} />
-                 
-
-               
-                
-                
-                  {/* <InfoCard label="Population" value={} /> */}
-                  <InfoCard label="Population" value={lguInfo["No. of Population"]} />
-                  <InfoCard label="Barangays" value={lguInfo["No. of Barangays"]} />
-
-
-                 
-               
-                <div>
-                <InfoCard label="Location" 
-                    value={`${lguInfo.Latitude}° N, ${lguInfo.Longitude}° E`} 
-                  />
-                </div>
-              </div>
-            </div>
-            <h1 className=' absolute right-0 bottom-0 md:left-0 font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
-            <ScoreCircle score={Math.round(score)} />
-          </div>
-        </div>
-
-        <div className="border-b w-[50%] border-gray-200">
-          <nav className="flex">
-            {['About', 'Assessment', 'Attachments'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${
-                  activeTab === tab
-                    ? 'border-b-2 border-red-500 text-red-500 font-medium'
-                    : 'text-gray-500 hover:text-gray-700 border-transparent'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="py-4 md:py-6 w-[50%] md:w-full">
-          {activeTab === 'About' && (
-            <div className="flex flex-col md:flex-row">
-              <div className="w-full md:w-[70%] pr-0 md:pr-6">
-                <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
-              </div>
-            </div>
-          )}
-          {activeTab === 'Assessment' && renderAssessmentContent()}
-          {activeTab === 'Attachments' && (
-            <h3 className="text-xl font-semibold mb-4">Attachments</h3>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default About;

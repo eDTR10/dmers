@@ -67,11 +67,6 @@ interface DashboardProps {
   gridColsBase?: number;
 }
 
-// Updated scaleToPercentage based on about.tsx
-const scaleToPercentage = (value: number) => {
-  return ((value - 1) / 5) * 100;
-};
-
 // For Digital Skills Assessment:
 
 
@@ -279,7 +274,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       "General computer or office productivity software use",
       "Use of collaborative platforms",
       "Use of communication apps",
-      "Use of social media",
+      "Use of social media", 
       "Content creation",
       "Cybersecurity awareness",
       "Programming, web, and app dev...",
@@ -288,29 +283,36 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     const allOfficesData = getAllOfficesData();
     
-if (allOfficesData.length === 0) {
-  console.error("No office data found");
-  return;
-}
+    if (allOfficesData.length === 0) {
+      console.error("No office data found");
+      return;
+    }
 
-const skillsKeys = Array.from({ length: 10 }, (_, i) => `Question ${i + 1} DigitalSkillsAssessment`);
+    // Get all responses for each Digital Skills question
+    const skillsScores = Array.from({ length: 10 }, (_, questionIndex) => {
+      const key = `Question ${questionIndex + 1} DigitalSkillsAssessment`;
 
-// For each digital skills question, map each office's response using scaleToPercentage, then average the percentages
-const skillsValues = skillsKeys.map(key => {
-  const percentages = allOfficesData
-    .map((office:any) => scaleToPercentage(Number(office[key] || 0)))
-    .filter((value:any) => !isNaN(value));
-  return percentages.length ? calculateAverage(percentages) : 0;
-});
+      // Collect all responses for this question across all offices
+      const responses = allOfficesData
+        .map((office:any) => Number(office[key] || 0))
+        .filter((value:any) => !isNaN(value));
 
-// Calculate overall average percentage across questions
-const overallPercentage = skillsValues.reduce((sum, value) => sum + value, 0) / skillsValues.length;
+      // Calculate score using the same method as About.tsx
+      const total = responses.reduce((sum:any, value:any) => sum + value, 0);
+      const maxPossible = responses.length * 5;
+      const score = (total / maxPossible) * 100;
 
-setDigitalSkillsData({
-  labels: digitalSkillsLabels,
-  values: skillsValues,
-  percentage: overallPercentage
-});
+      return score;
+    });
+
+    // Calculate overall percentage
+    const overallPercentage = calculateAverage(skillsScores);
+
+    setDigitalSkillsData({
+      labels: digitalSkillsLabels,
+      values: skillsScores,
+      percentage: overallPercentage
+    });
   };
 
   // Process Technology Readiness Index data
@@ -321,61 +323,44 @@ setDigitalSkillsData({
       console.error("No office data found");
       return;
     }
-    
-    // Define categories and their question keys
-    const categories = {
-      'OPTIMISM': Array.from({ length: 10 }, (_, i) => `Optimism ${i + 1}`),
-      'INNOVATIVENESS': Array.from({ length: 7 }, (_, i) => `Innovativeness ${i + 1}`),
-      'DISCOMFORT': Array.from({ length: 10 }, (_, i) => `Discomfort ${i + 1}`),
-      'INSECURITY': Array.from({ length: 9 }, (_, i) => `Insecurity ${i + 1}`)
+
+    // Helper function to calculate TRI scores
+    const calculateTRIScore = (category: string, questionCount: number) => {
+      // Get all responses for this category across all offices
+      const responses = allOfficesData.flatMap((office:any) => {
+        return Array.from({ length: questionCount }, (_, i) => {
+          const key = `${category} ${i + 1}`;
+          return Number(office[key] || 0);
+        });
+      }).filter((value:any )=> !isNaN(value));
+
+      // Calculate score like About.tsx implementation
+      const total = responses.reduce((sum:any, value:any) => sum + value, 0);
+      const maxPossible = responses.length * 5;
+      return (total / maxPossible) * 100;
     };
 
-    // Calculate scores for each category by converting each office's answer and averaging per question
-    const categoryScores = Object.entries(categories).map(([category, keys]) => {
-      const scores = keys.map(key => {
-        const percentages = allOfficesData
-          .map((office:any) => scaleToPercentage(Number(office[key] || 0)))
-          .filter((value:any) => !isNaN(value));
-        return {
-          question: key,
-          score: percentages.length ? calculateAverage(percentages) : 0
-        };
-      });
+    // Calculate scores for each category
+    const optimismScore = calculateTRIScore('Optimism', 10);
+    const innovativenessScore = calculateTRIScore('Innovativeness', 7);
+    const discomfortScore = calculateTRIScore('Discomfort', 10);
+    const insecurityScore = calculateTRIScore('Insecurity', 9);
 
-      const categoryAverage = calculateAverage(scores.map(item => item.score));
-
-      return { category, scores, average: categoryAverage };
-    });
-
-    console.log("categoryScores", categoryScores)
-
-    // Calculate TRI score with inverted negative dimensions
-    const optimismScore = categoryScores.find(item => item.category === "OPTIMISM")?.average || 0;
-    const innovativenessScore = categoryScores.find(item => item.category === "INNOVATIVENESS")?.average || 0;
-    const discomfortScore = categoryScores.find(item => item.category === "DISCOMFORT")?.average || 0;
-    const insecurityScore = categoryScores.find(item => item.category === "INSECURITY")?.average || 0;
-
-    // Calculate final TRI score with inverted negative dimensions
+    // Calculate final TRI score
     const triScore = (
       optimismScore + 
       innovativenessScore + 
-      (100 - discomfortScore) + 
-      (100 - insecurityScore)
+      discomfortScore + 
+      insecurityScore
     ) / 4;
 
     setTRIData({
-      labels: Object.keys(categories),
-      values: categoryScores.map(item => {
-        if (item.category === "DISCOMFORT" || item.category === "INSECURITY") {
-          return 100 - item.average; // Invert negative dimensions for display
-        }
-        return item.average;
-      }),
+      labels: ['OPTIMISM', 'INNOVATIVENESS', 'DISCOMFORT', 'INSECURITY'],
+      values: [optimismScore, innovativenessScore, discomfortScore, insecurityScore],
       percentage: triScore
     });
   };
 
-  console.log("triData" , triData)
   // Process IT Readiness data
   const processITReadinessData = () => {
     const allOfficesData = getAllOfficesData();

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 ;
 import Dashboard from '@/components/chart/Maturity';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+
 import rawData from './../../assets/data/eReadinessSurveyData.json';
 const Data: any = rawData;
 
@@ -17,9 +18,7 @@ const calculateAverage = (values: number[]) => {
   return validValues.length ? validValues.reduce((a, b) => a + b, 0) / validValues.length : 0;
 };
 
-const scaleToPercentage = (value: number) => {
-  return ((value - 1) / 5) * 100;
-};
+
 
 // Helper function to calculate percentage score
 const calculatePercentageScore = (responses: number[]) => {
@@ -31,91 +30,55 @@ const calculatePercentageScore = (responses: number[]) => {
   return (actualScore / totalPossibleScore) * 100;
 };
 
-// New version of processLGUData that expects an array of offices’ responses for a given LGU
+// Update the processLGUData function with the new calculation methods
 const processLGUData = (officesData: any[]) => {
   // Find IT Office data for this LGU
   const lguName = officesData[0]["LGU Name"];
   const itOfficeData:any = Data["IT Office"].find((data:any) => data["LGU Name"] === lguName);
 
-  // Accumulate digital skills and TRI responses from all offices
-  const combinedScores = officesData.reduce((acc: any, data: any) => {
-    // Digital Skills Assessment
-    const digitalSkillsKeys = Array.from({ length: 10 }, (_, i) => `Question ${i + 1} DigitalSkillsAssessment`);
-    const digitalSkillsScores = digitalSkillsKeys.map(key => ({
-      question: key,
-      score: scaleToPercentage(Number(data[key] || 0))
-    }));
-    
-    // Technology Readiness Index (TRI)
-    const categories = {
-      'OPTIMISM': Array.from({ length: 10 }, (_, i) => `Optimism ${i + 1}`),
-      'INNOVATIVENESS': Array.from({ length: 7 }, (_, i) => `Innovativeness ${i + 1}`),
-      'DISCOMFORT': Array.from({ length: 10 }, (_, i) => `Discomfort ${i + 1}`),
-      'INSECURITY': Array.from({ length: 9 }, (_, i) => `Insecurity ${i + 1}`)
+  // Digital Skills Assessment - Updated calculation
+  const digitalSkillsKeys = Array.from({ length: 10 }, (_, i) => `Question ${i + 1} DigitalSkillsAssessment`);
+  const digitalSkillsScores = digitalSkillsKeys.map(key => {
+    const responses = officesData
+      .map(office => Number(office[key] || 0))
+      .filter(value => !isNaN(value));
+
+    // Calculate score using total/maxPossible method
+    const total = responses.reduce((sum, value) => sum + value, 0);
+    const maxPossible = responses.length * 5;
+    return (total / maxPossible) * 100;
+  });
+
+  const digitalSkillsAvg = calculateAverage(digitalSkillsScores);
+
+  // Technology Readiness Index - Updated calculation
+  const triCategories = {
+    'Optimism': { count: 10 },
+    'Innovativeness': { count: 7 },
+    'Discomfort': { count: 10 },
+    'Insecurity': { count: 9 }
+  };
+
+  const triScores = Object.entries(triCategories).map(([category, { count }]) => {
+    const responses = officesData.flatMap(office => {
+      return Array.from({ length: count }, (_, i) => {
+        const key = `${category} ${i + 1}`;
+        return Number(office[key] || 0);
+      });
+    }).filter(value => !isNaN(value));
+
+    // Calculate score using total/maxPossible method
+    const total = responses.reduce((sum, value) => sum + value, 0);
+    const maxPossible = responses.length * 5;
+    return {
+      category: category.toUpperCase(),
+      score: (total / maxPossible) * 100
     };
-    
-    const categoryScores = Object.entries(categories).map(([category, keys]) => {
-      const scores = keys.map(key => ({
-        question: key,
-        score: scaleToPercentage(Number(data[key] || 0))
-      }));
-      return {
-        category,
-        scores,
-        average: calculateAverage(scores.map(item => item.score))
-      };
-    });
-    
-    // Accumulate digital skills scores
-    if (!acc.digitalSkills) {
-      acc.digitalSkills = { scores: digitalSkillsScores, count: 1 };
-    } else {
-      acc.digitalSkills.scores = acc.digitalSkills.scores.map((score: any, index: number) => ({
-        question: score.question,
-        score: score.score + digitalSkillsScores[index].score
-      }));
-      acc.digitalSkills.count++;
-    }
-    
-    // Accumulate TRI scores by categories
-    if (!acc.techReadiness) {
-      acc.techReadiness = { categories: categoryScores, count: 1 };
-    } else {
-      acc.techReadiness.categories = acc.techReadiness.categories.map((cat: any, index: number) => ({
-        category: cat.category,
-        scores: cat.scores.map((score: any, i: number) => ({
-          question: score.question,
-          score: score.score + categoryScores[index].scores[i].score
-        })),
-        average: cat.average + categoryScores[index].average
-      }));
-      acc.techReadiness.count++;
-    }
-    
-    return acc;
-  }, {} as any);
-  
-  // Compute averages from the accumulated values
-  
-  // Digital Skills average over all questions:
-  const digitalSkillsAvg =
-    calculateAverage(combinedScores.digitalSkills.scores.map((s: any) => s.score)) /
-    combinedScores.digitalSkills.count;
-  
-  // Process TRI categories: average each category’s raw average over the offices
-  const techCategories = (combinedScores.techReadiness.categories || []).map((cat: any) => ({
-    category: cat.category,
-    average: cat.average / combinedScores.techReadiness.count
-  }));
-  
-  // Use the TRI formula (the way you defined it) using these averaged values:
-  const optimism = techCategories.find((cat: any) => cat.category === "OPTIMISM")?.average || 0;
-  const innovativeness = techCategories.find((cat: any) => cat.category === "INNOVATIVENESS")?.average || 0;
-  const discomfort = techCategories.find((cat: any) => cat.category === "DISCOMFORT")?.average || 0;
-  const insecurity = techCategories.find((cat: any) => cat.category === "INSECURITY")?.average || 0;
-  
-  const techReadinessAvg = (optimism + innovativeness + (100 - discomfort) + (100 - insecurity)) / 4;
-  
+  });
+
+  // Calculate final TRI score as average of all dimensions
+  const techReadinessAvg = calculateAverage(triScores.map(cat => cat.score));
+
   // For IT Readiness and Change Management you might want to perform similar aggregations;
   // here we leave them as zero (or add your preferred calculation) since your issue was with
   // combining responses for Digital Skills and TRI.
@@ -185,13 +148,13 @@ const processLGUData = (officesData: any[]) => {
   return {
     digitalSkills: {
       percentage: digitalSkillsAvg,
-      data: combinedScores.digitalSkills.scores,
+      data: digitalSkillsScores,
       labels: Array.from({ length: 10 }, (_, i) => `Question ${i + 1}`)
     },
     techReadiness: {
       percentage: techReadinessAvg,
-      data: techCategories.map((cat: any) => cat.average),
-      labels: techCategories.map((cat: any) => cat.category)
+      data: triScores.map(cat => cat.score),
+      labels: triScores.map(cat => cat.category)
     },
     itReadiness: { percentage: itReadinessAvg },
     changeManagement: { percentage: changeManagementAvg },
@@ -396,13 +359,14 @@ function MisamisOriental() {
           
           {/* Right side - Charts */}
           <div className="w-[70%] space-y-4">
+
+            
           <Dashboard
         data={filteredData } 
         title="Digital Skills Card Full Width" 
         gridColsBase={1}
         
       />
-
             {/* Pie Chart */}
             <div className="bg-white p-4 border border-gray-200 rounded-lg">
               <h2 className="text-lg font-medium mb-4">LGUs Assessment Scores</h2>
@@ -434,7 +398,7 @@ function MisamisOriental() {
       }
     }
   }}
-  plugins={[ChartDataLabels]}// Add plugin locally
+  plugins={[ChartDataLabels]} // Add plugin locally
 />
               </div>
             </div>
@@ -480,7 +444,6 @@ function MisamisOriental() {
               </div>
             </div>
 
-            
           </div>
         </div>
       </div>
