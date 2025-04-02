@@ -48,7 +48,7 @@ function App() {
         {/* Sidebar Navigation */}
         <nav className={`
           z-40 bg-[#0036C5] border-r-2 
-          w-[20vw] h-full md:absolute relative
+          w-[20vw] md:w-[300px] h-full md:absolute relative
           transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : ' fixed -translate-x-full'}
         `}>
@@ -63,23 +63,23 @@ function App() {
             }`}
           >
             <Home className="text-white" />
-            <h1 className="text-white font-bold text-lg">Dashboard</h1>
+            <h1 className="text-white font-bold text-lg md:text-2xl">Dashboard</h1>
           </Link>
 
-          <div className="ml-5">
+          <div className="ml-5 sm:ml-10">
             <h1 className="text-white font-bold text-lg mb-4">Provinces</h1>
-            <ul className="px-2 flex flex-col space-y-2">
+            <ul className="px-2 flex flex-col space-y-2 sm:space-y-2">
               <li className={`flex items-center space-x-2 cursor-pointer p-2 rounded-sm ${
                 currentPath === '/camiguin' ? 'bg-[#1C1D20]' : 'hover:bg-[#1C1D20]'
               }`}>
                 <Building2Icon className="text-white" />
-                <Link to="/camiguin" className="text-white">Camiguin</Link>
+                <Link to="/camiguin" className="text-white  md:text-2xl">Camiguin</Link>
               </li>
               <li className={`flex items-center space-x-2 cursor-pointer p-2 rounded-sm ${
                 currentPath === '/misamis-oriental' ? 'bg-[#1C1D20]' : 'hover:bg-[#1C1D20]'
               }`}>
                 <Building2Icon className="text-white" />
-                <Link to="/misamis-oriental" className="text-white">Misamis Oriental</Link>
+                <Link to="/misamis-oriental" className="text-white md:text-2xl">Misamis Oriental</Link>
               </li>
             </ul>
           </div>

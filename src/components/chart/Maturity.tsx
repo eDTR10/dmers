@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
 // Register Chart.js components
@@ -19,7 +20,8 @@ ChartJS.register(
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartDataLabels 
 );
 
 interface CardProps {
@@ -236,7 +238,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Get all offices data from the JSON
   const getAllOfficesData = () => {
     const allowedOffices = ["Mayors Office", "Other Offices", "HR Office", "IT Office"];
-    const allOffices:any = [];
+    const allOffices: any = [];
     
     // Iterate through allowed offices only
     Object.keys(data).forEach(officeKey => {
@@ -245,7 +247,42 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
     });
   
-    console.log("allOffices", allOffices);
+    let changeReadinessSum = 0;
+    let changeReadinessCount = 0;
+  
+    allOffices.forEach((office: any) => {
+      if (office["OFFICE SELECTION"] === "MIS\/IT") {
+        // Convert values to numbers and sum only if they're valid numbers
+        const values = [
+          Number(office["Costs or Financial 1"]) || 0,
+          Number(office["Costs or Financial 2"]) || 0,
+          Number(office["Costs or Financial 3"]) || 0,
+          Number(office["Costs or Financial 4"]) || 0,
+          Number(office["Costs or Financial 5"]) || 0,
+
+
+
+
+        ];
+        
+        values.forEach(value => {
+          if (value > 0) {
+            changeReadinessSum += value;
+            changeReadinessCount++;
+          }
+        });
+      }
+    });
+  
+    // Calculate average with 2 decimal places
+    const changeReadinessAverage = changeReadinessCount > 0 
+      ? Number((changeReadinessSum / changeReadinessCount).toFixed(2)) 
+      : 0;
+  
+    console.log('Change Readiness Sum:', changeReadinessSum);
+    console.log('Change Readiness Count:', changeReadinessCount);
+    console.log('Change Readiness Score:',  (changeReadinessSum/(changeReadinessCount*5)) *100 );
+  
     return allOffices;
   };
 
