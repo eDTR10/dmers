@@ -298,9 +298,9 @@ function Camiguin() {
       <div className="p-5 w-[95%] h-[90%] flex flex-col bg-card/25 border border-border rounded-lg">
         <h1 className="py-4 px-2 rounded-sm text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">Camiguin Province</h1>
         
-        <div className="flex flex-row space-x-4">
+        <div className="flex flex-row md:flex-col md:items-center space-x-4 md:gap-10">
           {/* Left side - Table */}
-          <div className="w-[30%] border border-gray-200 rounded-lg overflow-hidden">
+          <div className="w-[30%] md:w-full border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-white">
               {/* Search bar */}
               <div className="flex items-center p-4 border-b border-gray-200">
@@ -358,7 +358,7 @@ function Camiguin() {
           </div>
           
           {/* Right side - Charts */}
-          <div className="w-[70%] space-y-4">
+          <div className="w-[70%] md:w-full flex flex-col gap-5 justify-center  space-y-4 md:space-y-0">
 
             
           <Dashboard
