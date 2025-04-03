@@ -118,17 +118,16 @@ function About() {
     // Map our friendly office names to data keys
     const officeDataKey = officeName === "Mayor's Office" ? "Mayors Office" : officeName;
     
-    let officeData:any;
+    let officeData;
+    let Datas:any=  Data
     if (["Mayor's Office", "HR Office", "IT Office"].includes(officeName)) {
-      let officeData = Data[officeDataKey as keyof typeof Data];
-      const data: any = officeData?.find(
-        item => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+      officeData = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
+        (item:any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
       );
-      officeData = data;
     } else {
       // Find in Other Offices with matching Office Name
-      officeData = Data["Other Offices"].find(
-        item => 
+      officeData = Datas["Other Offices"].find(
+        (item:any) => 
           item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
           item["Office Name"] === officeName
       );
@@ -357,7 +356,7 @@ function About() {
                               <thead>
                                 <tr>
                                   <th className="text-left py-1">Office</th>
-                                  <th className="text-right py-1">Rating (0-5)</th>
+                                  <th className="text-right py-1">Rating (1-5)</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -367,12 +366,10 @@ function About() {
                                   
                                   // Get response for this office
                                   let officeResponse = 0;
-                                  
+                                  let Datas:any=  Data
                                   if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
-                                    const dataKey = officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey;
-                                    const officeData = Data[dataKey as keyof typeof Data];
-                                    const data:any = officeData?.find(
-                                      item => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+                                    const data = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
+                                      (item:any)=> item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
                                     );
 
 
@@ -385,7 +382,7 @@ function About() {
                                         item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
                                         item["Office Name"] === office
                                     );
-                                    officeResponse = Number(data?.[`Question ${index + 1}DigitalSkillsAssessment`] || 0);
+                                    officeResponse = Number(data?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
                                   }
                                   
                                   return (
@@ -479,9 +476,10 @@ function About() {
                               {officesWithData.filter(o => o !== "All Offices").map((office, i) => {
                                 const officeDataKey = office === "Mayor's Office" ? "Mayors Office" : office;
                                 let officeResponse = 0;
+                                let Datas:any=  Data
                                 
                                 if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
-                                  let data:any = (Data as any)[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey]?.find(
+                                  const data = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
                                     (item:any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
                                   );
                                   officeResponse = Number(data?.[`${item.split(' ')[0]} ${qIndex + 1}`] || 0);
@@ -752,11 +750,11 @@ const calculateAverage = (values: number[]) => {
 // Update the Digital Skills calculation inside calculateLGUDetailedScores
 const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   // Get IT Office data specifically for IT Readiness and Change Management
-  
+ 
 
   // Get data from all offices including Other Offices
   let officesData: any[] = [];
-  
+  let Datas:any=  Data
   // Add data from main offices (Mayor's, HR, IT)
   offices.forEach(office => {
     if (office === "Other Offices") {
@@ -767,8 +765,7 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
         officesData.push(...otherOfficesData);
       }
     } else {
-      let da:any = Data
-      const officeData = da[office]?.filter((data:any) => 
+      const officeData = Datas[office]?.filter((data:any) => 
         data["LGU Name"]?.toUpperCase() === lguName?.toUpperCase()
       );
       if (officeData) {
@@ -1045,11 +1042,11 @@ const calculateAverageRating = (offices: string[], category: string, questionNum
   
   offices.filter(o => o !== "All Offices").forEach(office => {
     let data: any = null;
+    let Datas:any=  Data
     
     if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
       const officeKey = office === "Mayor's Office" ? "Mayors Office" : office;
-      const da:any = Data 
-      data = da[officeKey]?.find((item:any) => 
+      data = Datas[officeKey]?.find((item:any) => 
         item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
       );
     } else {

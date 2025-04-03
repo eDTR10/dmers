@@ -350,7 +350,7 @@ function Camiguin() {
                   >
                     <div className="p-4 col-span-1">{lgu.rank}</div>
                     <div className="p-4 col-span-2 truncate">{lgu.name}</div>
-                    <div className="p-4 col-span-2">{lgu.score}</div>
+                    <div className="p-4 col-span-2">{lgu.score} %</div>
                   </div>
                 ))}
               </div>
