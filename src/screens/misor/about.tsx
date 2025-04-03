@@ -118,7 +118,7 @@ function About() {
     // Map our friendly office names to data keys
     const officeDataKey = officeName === "Mayor's Office" ? "Mayors Office" : officeName;
     
-    let officeData;
+    let officeData:any;
     let Datas:any=  Data
     if (["Mayor's Office", "HR Office", "IT Office"].includes(officeName)) {
       officeData = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
@@ -634,13 +634,13 @@ function About() {
 
   return (
     <div className="min-h-full w-full py-10 flex items-center justify-center">
-      <div className="p-5 h-full  w-[95%] flex flex-col bg-card/25 border border-border border-b-0 rounded-lg">
+      <div className="p-5 h-full relative  w-[95%] flex flex-col bg-card/25 border border-border border-b-0 rounded-lg   ">
         <h1 className="py-4 px-2 text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
-          {`${lguInfo["LGU Name"]}, ${lguInfo.Province}`}
+          {`${lguInfo["LGU Name"]}, Misamis Oriental`}
         </h1>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex relative justify-between md:items-end items-center md:flex-col">
+        <div className="bg-white h-full p-6 rounded-lg border border-border ">
+          <div className="flex relative h-full justify-between md:items-end items-center md:flex-col">
             <div className="w-[80%] md:w-full ">
               <div className="grid grid-cols-3 gap-6">
                 <InfoCard span="2" label="Municipality" value={lguInfo["LGU Name"]} />
@@ -657,8 +657,12 @@ function About() {
                 </div>
               </div>
             </div>
-            <h1 className=' absolute right-0 bottom-0 md:left-0 font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
+            <div className=' w-[30%] md:w-full  h-full flex flex-col  items-center md:items-end '>
             <ScoreCircle score={Math.round(score)} />
+              <h1 className=' absolute bottom-0 right-0 md:left-0  font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
+            
+            
+            </div>
           </div>
         </div>
 
@@ -682,11 +686,18 @@ function About() {
 
         <div className="py-4 md:py-6 w-full md:w-full">
           {activeTab === 'About' && (
-            <div className="flex flex-col md:flex-row">
-              <div className="w-full  pr-0 md:pr-6">
-                <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
-              </div>
-            </div>
+             <div className="w-full  md:flex-row grid grid-cols-6">
+             <div className=" col-span-4 pr-0 md:pr-6">
+               <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
+             </div>
+             <div className=" col-span-2  flex justify-center items-start">
+               <img 
+                 src={lguInfo["Logo"]} 
+                 alt={`${lguInfo["LGU Name"]} Logo`}
+                 className=" w-full max-w-[200px] mt-[10%] h-auto object-contain"
+               />
+             </div>
+           </div>
           )}
           {activeTab === 'Assessment' && renderAssessmentContent()}
           {activeTab === 'Attachments' && (
@@ -706,18 +717,18 @@ const InfoCard = ({ label, value, span }: any) => (
 );
 
 const ScoreCircle = ({ score }: { score: number }) => (
-  <div className="w-1/2 flex flex-col items-center justify-center">
+  <div className=" flex flex-col items-center ">
     <div className="text-xl font-bold text-[#0036C5] mb-2">Score</div>
     <div className="relative w-40 h-40">
       <svg className="w-full h-full transform -rotate-90">
-        <circle cx="80" cy="80" r="70" fill="none" stroke="#ecc216" strokeWidth="8" />
+        <circle cx="80" cy="80" r="70" fill="none" stroke="#ecc216" strokeWidth="15" />
         <circle
           cx="80"
           cy="80"
           r="70"
           fill="none"
           stroke="#0036C5"
-          strokeWidth="8"
+          strokeWidth="15"
           strokeLinecap="round"
           strokeDasharray={`${(score / 100) * 439.6} 439.6`}
         />
