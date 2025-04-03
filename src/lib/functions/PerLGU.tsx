@@ -974,10 +974,9 @@ export const getLGUICTChangeManagementDetailedScores = (lguName: string): Record
 //Getting the IT Readiness Assessment overall score per LGU
 export const getLGUITReadinessScore = (lguName: string): number => {
     // Cast the data to our type
-    const typedData = Data as SurveyData;
+
 
     // Sections to check for IT Readiness questions
-    const sections = ["IT Office"];
 
     // Get detailed scores
     const detailedScores = getLGUITReadinessDetailedScores(lguName);

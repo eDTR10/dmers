@@ -33,6 +33,11 @@ function App() {
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
+  // Helper function to check if current path includes the base route
+  const isActiveRoute = (basePath: string) => {
+    return currentPath.startsWith(basePath);
+  };
+
   return (
     <DashboardProvider>
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
@@ -70,13 +75,13 @@ function App() {
             <h1 className="text-white font-bold text-lg mb-4">Provinces</h1>
             <ul className="px-2 flex flex-col space-y-2 sm:space-y-2">
               <li className={`flex items-center space-x-2 cursor-pointer p-2 rounded-sm ${
-                currentPath === '/camiguin' ? 'bg-[#1C1D20]' : 'hover:bg-[#1C1D20]'
+                isActiveRoute('/camiguin') ? 'bg-[#1C1D20]' : 'hover:bg-[#1C1D20]'
               }`}>
                 <Building2Icon className="text-white" />
                 <Link to="/camiguin" className="text-white  md:text-2xl">Camiguin</Link>
               </li>
               <li className={`flex items-center space-x-2 cursor-pointer p-2 rounded-sm ${
-                currentPath === '/misamis-oriental' ? 'bg-[#1C1D20]' : 'hover:bg-[#1C1D20]'
+                isActiveRoute('/misamis-oriental') ? 'bg-[#1C1D20]' : 'hover:bg-[#1C1D20]'
               }`}>
                 <Building2Icon className="text-white" />
                 <Link to="/misamis-oriental" className="text-white md:text-2xl">Misamis Oriental</Link>

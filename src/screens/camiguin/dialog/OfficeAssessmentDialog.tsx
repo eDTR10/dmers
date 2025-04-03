@@ -21,8 +21,6 @@ const OfficeAssessmentDialog: React.FC<OfficeAssessmentDialogProps> = ({
     isOpen,
     onClose,
     item,
-    detailedScores,
-    lguAssessmentData,
     officeBreakdown
 }) => {
     if (!isOpen || !item) return null;

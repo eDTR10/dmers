@@ -273,9 +273,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     });
   
     // Calculate average with 2 decimal places
-    const changeReadinessAverage = changeReadinessCount > 0 
-      ? Number((changeReadinessSum / changeReadinessCount).toFixed(2)) 
-      : 0;
+
   
     console.log('Change Readiness Sum:', changeReadinessSum);
     console.log('Change Readiness Count:', changeReadinessCount);
