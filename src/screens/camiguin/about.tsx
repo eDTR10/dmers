@@ -318,9 +318,9 @@ function About() {
                 }
 
                 // Determine color based on score
-                const scoreColor = score >= 80 ? 'bg-green-100 border-green-300' :
-                                 score >= 50 ? 'bg-blue-50 border-blue-200' :
-                                 score >= 30 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200';
+                const scoreColor = score >= 80 ? 'bg-blue-50 border-blue-300' :
+                                 score >= 50 ? ' bg-yellow-100/40 border-yellow-200' :
+                                 score >= 30 ? 'bg-red-100 border-red-200' : 'bg-red-50 border-red-200';
 
                 return (
                   <div 
