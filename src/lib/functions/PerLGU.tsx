@@ -9,25 +9,48 @@ export const getLGUDigitalSkillsAverage = (lguName: string): number => {
     // Cast the data to our type
     const typedData = Data as SurveyData;
 
-    // All sections to check for Digital Skills Assessment questions
+    // Use only the sections that have valid data for all LGUs
     const sections = ["Other Offices", "HR Office", "Mayors Office", "IT Office"];
 
-    // Calculate total sum of all available Digital Skills Assessment questions
-    let sum = 0;
-    let count = 0;
+    // Question labels for reference
+    const questionLabels = [
+        "Basic computer skill",
+        "Basic Internet searching",
+        "General computer or office productivity software use",
+        "Use of collaborative platforms",
+        "Use of communication apps",
+        "Use of social media",
+        "Content creation",
+        "Cybersecurity awareness",
+        "Programming, web, and app development",
+        "Digital design and data visualization"
+    ];
 
-    // Process each section
-    sections.forEach((section) => {
+    console.log(`Calculating Digital Skills for LGU: ${lguName}`);
+
+    // First collect all scores by question number
+    const questionScores: number[][] = Array(10).fill(0).map(() => []);
+
+    // Process each section to collect scores
+    sections.forEach(section => {
         if (typedData[section]) {
-            // Process each entry in the section, filtering by LGU name
-            typedData[section].forEach((entry: any) => {
-                // Only process entries for the specified LGU
-                if (entry["LGU Name"] === lguName) {
+            typedData[section].forEach(entry => {
+                // Check for both field variations
+                const entryLGU = entry["LGU Name"] || entry["LGU"] || "";
+
+                // Compare case-insensitive
+                if (entryLGU.toString().toUpperCase() === lguName.toUpperCase()) {
+                    console.log(`Found entry in ${section} for ${lguName}`);
+
+                    // Get scores for each question
                     for (let i = 1; i <= 10; i++) {
                         const questionKey = `Question ${i} DigitalSkillsAssessment`;
-                        if (entry[questionKey] !== undefined) {
-                            sum += Number(entry[questionKey]);
-                            count++;
+                        if (entry[questionKey] !== undefined && entry[questionKey] !== null) {
+                            const score = Number(entry[questionKey]);
+                            if (!isNaN(score) && score >= 1 && score <= 5) {
+                                questionScores[i - 1].push(score);
+                                console.log(`  ${questionKey}: ${score}`);
+                            }
                         }
                     }
                 }
@@ -35,14 +58,32 @@ export const getLGUDigitalSkillsAverage = (lguName: string): number => {
         }
     });
 
-    // Calculate average, convert to percentage (assuming 5 is 100%), and round to 2 decimal places
-    if (count > 0) {
-        const average = sum / count;
-        const percentage = (average / 5) * 100;
-        return Number(percentage.toFixed(2));
-    } else {
+    // Calculate percentage for each question - exactly like about.tsx
+    const percentages = questionScores.map((scores, i) => {
+        if (scores.length === 0) return 0;
+
+        const total = scores.reduce((sum, score) => sum + score, 0);
+        const maxPossible = scores.length * 5;
+        const percentage = (total / maxPossible) * 100;
+
+        console.log(`${questionLabels[i]}: ${percentage.toFixed(2)}% (${total}/${maxPossible})`);
+        return percentage;
+    });
+
+    // Only include questions that have data
+    const validPercentages = percentages.filter(p => p > 0);
+
+    if (validPercentages.length === 0) {
+        console.log(`No data found for ${lguName}`);
         return 0;
     }
+
+    // Calculate overall average (simple mean of all percentages)
+    const sum = validPercentages.reduce((total, p) => total + p, 0);
+    const average = sum / validPercentages.length;
+
+    console.log(`${lguName} Digital Skills Average: ${average.toFixed(2)}%`);
+    return Number(average.toFixed(2));
 };
 
 export const getProvinceDigitalSkillsQuestionAverages = (province: string): Record<string, number> => {
@@ -132,7 +173,7 @@ export const getLGUDigitalSkillsQuestionAverages = (lguName: string): Record<str
     const counts = Array(10).fill(0);
 
     // Process each section
-    sections.forEach((section) => {
+    lguName == "CATARMAN" ? sections.forEach((section) => {
         if (typedData[section]) {
             // Process each entry in the section, filtering by LGU name
             typedData[section].forEach((entry: any) => {
@@ -149,7 +190,25 @@ export const getLGUDigitalSkillsQuestionAverages = (lguName: string): Record<str
                 }
             });
         }
-    });
+    }) : sections.forEach((section) => {
+        if (typedData[section]) {
+            // Process each entry in the section, filtering by LGU name
+            typedData[section].forEach((entry: any) => {
+                // Only process entries for the specified LGU
+                if (entry["LGU"] === lguName) {
+                    // Process each question individually
+                    for (let i = 1; i <= 10; i++) {
+                        const questionKey = `Question ${i} DigitalSkillsAssessment`;
+                        if (entry[questionKey] !== undefined) {
+                            sums[i - 1] += Number(entry[questionKey]);
+                            counts[i - 1]++;
+                        }
+                    }
+                }
+            });
+        }
+    }
+    );
 
     // Calculate percentages for each question
     const result: Record<string, number> = {};
@@ -974,10 +1033,10 @@ export const getLGUICTChangeManagementDetailedScores = (lguName: string): Record
 //Getting the IT Readiness Assessment overall score per LGU
 export const getLGUITReadinessScore = (lguName: string): number => {
     // Cast the data to our type
-    const typedData = Data as SurveyData;
+    // const typedData = Data as SurveyData;
 
-    // Sections to check for IT Readiness questions
-    const sections = ["IT Office"];
+    // // Sections to check for IT Readiness questions
+    // const sections = ["IT Office"];
 
     // Get detailed scores
     const detailedScores = getLGUITReadinessDetailedScores(lguName);

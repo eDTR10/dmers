@@ -65,17 +65,17 @@ function About() {
 
           console.log('Component Scores:', scores.componentScores.digitalSkills);
         }
-        
+
         // Get all offices that have data for this LGU
         const availableOffices = ["Mayor's Office", "HR Office", "IT Office"];
-        
+
         // Add other offices dynamically
         const otherOfficesData = Data["Other Offices"].filter(
           item => item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
         );
-        
+
         const uniqueOtherOffices = [...new Set(otherOfficesData.map(item => item["Office Name"]))];
-        
+
         setOfficesWithData(["All Offices", ...availableOffices, ...uniqueOtherOffices]);
       }
     }
@@ -114,36 +114,36 @@ function About() {
     if (officeName === "All Offices") {
       return getChartData();
     }
-    
+
     // Map our friendly office names to data keys
     const officeDataKey = officeName === "Mayor's Office" ? "Mayors Office" : officeName;
-    
-    let officeData;
+
+    let officeData: any;
     if (["Mayor's Office", "HR Office", "IT Office"].includes(officeName)) {
-      officeData = Data[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
+      officeData = Data[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey as keyof typeof Data]?.find(
         item => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
       );
     } else {
       // Find in Other Offices with matching Office Name
       officeData = Data["Other Offices"].find(
-        item => 
-          item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
+        item =>
+          item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() &&
           item["Office Name"] === officeName
       );
     }
-    
+
     if (!officeData) return getChartData(); // Fallback
-    
+
     // Process data based on assessment type
     let labels = [];
     let data = [];
-    
+
     switch (selectedAssessment) {
       case 'DIGITAL SKILLS ASSESSMENT':
         labels = assData[0].data;
         data = labels.map((_, idx) => {
           const key = `Question ${idx + 1} DigitalSkillsAssessment`;
-          const value = officeData[key] || 0;
+          const value = (key in officeData ? officeData[key as keyof typeof officeData] : 0) || 0;
           return (Number(value) / 5) * 100; // Convert to percentage
         });
         break;
@@ -152,14 +152,14 @@ function About() {
         data = labels.map(label => {
           const category = label.split(' ')[0]; // Extract category name
           const questionCount = parseInt(label.match(/\((\d+) questions\)/)?.[1] || "0");
-          
+
           // Calculate score for this category from this office
           let total = 0;
           for (let i = 1; i <= questionCount; i++) {
             const key = `${category} ${i}`;
-            total += Number(officeData[key] || 0);
+            total += Number((officeData as any)[key] || 0);
           }
-          
+
           return (total / (questionCount * 5)) * 100; // Convert to percentage
         });
         break;
@@ -167,7 +167,7 @@ function About() {
       default:
         return getChartData();
     }
-    
+
     return {
       labels,
       datasets: [
@@ -183,7 +183,7 @@ function About() {
   };
 
   const getChartData = () => {
-    let labels = [];
+    let labels: string[] = [];
     let data = [];
 
     switch (selectedAssessment) {
@@ -223,9 +223,9 @@ function About() {
     if (!detailedScores) return null;
 
     const chartData = selectedOffice === "All Offices" ? getChartData() : getOfficeData(selectedOffice);
-    
+
     // Determine if office selection should be enabled for current assessment
-    const enableOfficeSelection = ['DIGITAL SKILLS ASSESSMENT', 'TECHNOLOGY READINESS INDEX'].includes(selectedAssessment);
+    // const enableOfficeSelection = ['DIGITAL SKILLS ASSESSMENT', 'TECHNOLOGY READINESS INDEX'].includes(selectedAssessment);
 
     return (
       <div className="space-y-4  w-full">
@@ -246,14 +246,14 @@ function About() {
               </option>
             ))}
           </select>
-          
-      
+
+
         </div>
 
         <div className="flex flex-col md:flex-row gap-6">
           {/* Detailed Scores - Left side */}
-         
-          
+
+
           {/* Chart - Right side */}
           <div className="w-full grid grid-cols-2 md:grid-cols-1 gap-5 order-1 md:order-2">
             <div className=" col-span-1">
@@ -274,8 +274,8 @@ function About() {
                       fill="none"
                       stroke={
                         Percentage(selectedAssessment) >= 80 ? '#10B981' :
-                        Percentage(selectedAssessment) >= 60 ? '#0036C5' :
-                        Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
+                          Percentage(selectedAssessment) >= 60 ? '#0036C5' :
+                            Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
                       }
                       strokeWidth="8"
                       strokeLinecap="round"
@@ -283,11 +283,11 @@ function About() {
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-2xl font-bold" style={{ 
-                      color: 
+                    <span className="text-2xl font-bold" style={{
+                      color:
                         Percentage(selectedAssessment) >= 80 ? '#10B981' :
-                        Percentage(selectedAssessment) >= 60 ? '#0036C5' :
-                        Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
+                          Percentage(selectedAssessment) >= 60 ? '#0036C5' :
+                            Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
                     }}>
                       {Percentage(selectedAssessment)?.toFixed(1)}%
                     </span>
@@ -296,118 +296,118 @@ function About() {
               </div>
 
               <div className="w-full  order-2 md:order-1">
-            <h3 className="text-xl font-semibold mt-10 mb-4">Detailed Scores</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2  gap-4  overflow-y-auto pr-2">
-              {assData.find(section => section.title === selectedAssessment)?.data.map((item, index) => {
-                let score = 0;
-                let responses = [];
-                
-                switch (selectedAssessment) {
-                  case "DIGITAL SKILLS ASSESSMENT":
-                    score = detailedScores.digitalSkills.scores[index]?.score;
-                    responses = detailedScores.digitalSkills.scores[index]?.responses || [];
-                    break;
-                  case "TECHNOLOGY READINESS INDEX":
-                    score = detailedScores.technologyReadiness.categories[index]?.average;
-                    break;
-                  case "IT READINESS ASSESSMENT":
-                    score = detailedScores.itReadiness?.categories[index]?.score;
-                    break;
-                  case "ICT CHANGE MANAGEMENT":
-                    score = detailedScores.changeManagement?.categories[index]?.score;
-                    break;
-                }
+                <h3 className="text-xl font-semibold mt-10 mb-4">Detailed Scores</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2  gap-4  overflow-y-auto pr-2">
+                  {assData.find(section => section.title === selectedAssessment)?.data.map((item, index) => {
+                    let score = 0;
+                    let responses = [];
 
-                // Determine color based on score
-                const scoreColor = score >= 80 ? 'bg-green-100 border-green-300' :
-                                 score >= 60 ? 'bg-blue-50 border-blue-200' :
-                                 score >= 40 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200';
+                    switch (selectedAssessment) {
+                      case "DIGITAL SKILLS ASSESSMENT":
+                        score = detailedScores.digitalSkills.scores[index]?.score;
+                        responses = detailedScores.digitalSkills.scores[index]?.responses || [];
+                        break;
+                      case "TECHNOLOGY READINESS INDEX":
+                        score = detailedScores.technologyReadiness.categories[index]?.average;
+                        break;
+                      case "IT READINESS ASSESSMENT":
+                        score = detailedScores.itReadiness?.categories[index]?.score;
+                        break;
+                      case "ICT CHANGE MANAGEMENT":
+                        score = detailedScores.changeManagement?.categories[index]?.score;
+                        break;
+                    }
 
-                return (
-                  <div 
-                    key={index} 
-                    className={`p-4 rounded-lg border ${scoreColor} hover:shadow-md transition-all duration-200`}
-                  >
-                    <div className="text-sm text-gray-600 font-medium">{item}</div>
-                    <div className="text-lg font-semibold text-[#0036C5]">{score?.toFixed(2)}%</div>
-                    
-                    {/* Show per-office responses for Digital Skills if available */}
-                    {selectedAssessment === 'DIGITAL SKILLS ASSESSMENT' && responses?.length > 0 && (
-                      <div className="mt-2">
-                        <button 
-                          onClick={() => {
-                            // Toggle detailed view for this item
-                            setExpandedSections(prev => 
-                              prev.includes(`${selectedAssessment}-${index}`) 
-                                ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
-                                : [...prev, `${selectedAssessment}-${index}`]
-                            );
-                          }}
-                          className="text-xs text-blue-600 hover:underline"
-                        >
-                          {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Details' : 'View Office Responses'}
-                        </button>
-                        
-                        {expandedSections.includes(`${selectedAssessment}-${index}`) && (
-                          <div className="mt-2 text-xs bg-white p-2 rounded border">
-                            <table className="w-full">
-                              <thead>
-                                <tr>
-                                  <th className="text-left py-1">Office</th>
-                                  <th className="text-right py-1">Rating (0-5)</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {officesWithData.filter(o => o !== "All Offices").map((office, i) => {
-                                  // Map our friendly office names to data keys
-                                  const officeDataKey = office === "Mayor's Office" ? "Mayors Office" : office;
-                                  
-                                  // Get response for this office
-                                  let officeResponse = 0;
-                                  
-                                  if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
-                                    const data = Data[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
-                                      item => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
-                                    );
-                                    officeResponse = Number(data?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
-                                  } else {
-                                    // Find in Other Offices with matching Office Name
-                                    const data = Data["Other Offices"].find(
-                                      item => 
-                                        item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
-                                        item["Office Name"] === office
-                                    );
-                                    officeResponse = Number(data?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
-                                  }
-                                  
-                                  return (
-                                    <tr key={i} className="border-t">
-                                      <td className="py-1">{office}</td>
-                                      <td className="text-right py-1">
-                                        <div className="flex items-center justify-end">
-                                          <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                                            <div 
-                                              className="bg-blue-600 h-2 rounded-full" 
-                                              style={{ width: `${(officeResponse/5)*100}%` }}
-                                            ></div>
-                                          </div>
-                                          {officeResponse}
-                                        </div>
-                                      </td>
+                    // Determine color based on score
+                    const scoreColor = score >= 80 ? 'bg-green-100 border-green-300' :
+                      score >= 60 ? 'bg-blue-50 border-blue-200' :
+                        score >= 40 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200';
+
+                    return (
+                      <div
+                        key={index}
+                        className={`p-4 rounded-lg border ${scoreColor} hover:shadow-md transition-all duration-200`}
+                      >
+                        <div className="text-sm text-gray-600 font-medium">{item}</div>
+                        <div className="text-lg font-semibold text-[#0036C5]">{score?.toFixed(2)}%</div>
+
+                        {/* Show per-office responses for Digital Skills if available */}
+                        {selectedAssessment === 'DIGITAL SKILLS ASSESSMENT' && responses?.length > 0 && (
+                          <div className="mt-2">
+                            <button
+                              onClick={() => {
+                                // Toggle detailed view for this item
+                                setExpandedSections(prev =>
+                                  prev.includes(`${selectedAssessment}-${index}`)
+                                    ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
+                                    : [...prev, `${selectedAssessment}-${index}`]
+                                );
+                              }}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Details' : 'View Office Responses'}
+                            </button>
+
+                            {expandedSections.includes(`${selectedAssessment}-${index}`) && (
+                              <div className="mt-2 text-xs bg-white p-2 rounded border">
+                                <table className="w-full">
+                                  <thead>
+                                    <tr>
+                                      <th className="text-left py-1">Office</th>
+                                      <th className="text-right py-1">Rating (0-5)</th>
                                     </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
+                                  </thead>
+                                  <tbody>
+                                    {officesWithData.filter(o => o !== "All Offices").map((office, i) => {
+                                      // Map our friendly office names to data keys
+                                      const officeDataKey = office === "Mayor's Office" ? "Mayors Office" : office;
+
+                                      // Get response for this office
+                                      let officeResponse = 0;
+
+                                      if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
+                                        const data = Data[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey as keyof typeof Data]?.find(
+                                          item => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+                                        );
+                                        officeResponse = Number((data as any)?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
+                                      } else {
+                                        // Find in Other Offices with matching Office Name
+                                        const data = Data["Other Offices"].find(
+                                          item =>
+                                            item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() &&
+                                            item["Office Name"] === office
+                                        );
+                                        officeResponse = Number((data as Record<string, any>)[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
+                                      }
+
+                                      return (
+                                        <tr key={i} className="border-t">
+                                          <td className="py-1">{office}</td>
+                                          <td className="text-right py-1">
+                                            <div className="flex items-center justify-end">
+                                              <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                                <div
+                                                  className="bg-blue-600 h-2 rounded-full"
+                                                  style={{ width: `${(officeResponse / 5) * 100}%` }}
+                                                ></div>
+                                              </div>
+                                              {officeResponse}
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <div className="bg-white p-6 col-span-1 rounded-lg shadow">
               <div className="h-[500px]">
@@ -439,9 +439,9 @@ function About() {
                 />
               </div>
             </div>
-            
+
             {/* Interactive Score Display */}
-            
+
           </div>
         </div>
       </div>
@@ -484,11 +484,10 @@ function About() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${
-                  activeTab === tab
+                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${activeTab === tab
                     ? 'border-b-2 border-red-500 text-red-500 font-medium'
                     : 'text-gray-500 hover:text-gray-700 border-transparent'
-                }`}
+                  }`}
               >
                 {tab}
               </button>

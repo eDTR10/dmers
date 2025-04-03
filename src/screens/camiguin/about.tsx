@@ -11,7 +11,7 @@ function About() {
   const [activeTab, setActiveTab] = useState('About');
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [detailedScores, setDetailedScores] = useState<any>(null);
-  const [digitalScore,setDigitalScore] = useState<any>({});
+  const [digitalScore, setDigitalScore] = useState<any>({});
 
   // Update the useEffect to use the new scores
   useEffect(() => {
@@ -38,15 +38,21 @@ function About() {
           setScore(scores.totalScore);
 
           setDigitalScore(scores.componentScores)
-          
 
+          console.log('=== OVERALL ASSESSMENT SCORES ===');
+          console.log('DIGITAL SKILLS ASSESSMENT:', scores.componentScores.digitalSkills + '%');
+          console.log('LGU Office Employee\'s Technology Readiness Index:', scores.componentScores.techReadiness + '%');
+          console.log('IT Readiness Assessment:', scores.componentScores.itReadiness + '%');
+          console.log('ICT Change Management:', scores.componentScores.changeManagement + '%');
+          console.log('TOTAL SCORE:', scores.totalScore + '%');
+          console.log('===============================');
           console.log('Component Scores:', scores.componentScores.digitalSkills);
         }
       }
     }
   }, [lguName, location]);
 
-  function Percentage(data:any){
+  function Percentage(data: any) {
     switch (data) {
       case "DIGITAL SKILLS ASSESSMENT":
         return digitalScore.digitalSkills;
@@ -56,8 +62,8 @@ function About() {
         return digitalScore.itReadiness;
       case "ICT CHANGE MANAGEMENT":
         return digitalScore.changeManagement;
-        
-       
+
+
       default:
         break;
     }
@@ -95,7 +101,7 @@ function About() {
           >
             <h3 className="text-xl font-semibold">{section.title}</h3>
             <span className="text-2xl">
-              { Percentage(section.title)}% &nbsp; &nbsp;
+              {Percentage(section.title)}% &nbsp; &nbsp;
               {expandedSections.includes(section.title) ? '−' : '+'}
             </span>
           </button>
@@ -174,11 +180,10 @@ function About() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${
-                  activeTab === tab
+                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${activeTab === tab
                     ? 'border-b-2 border-red-500 text-red-500 font-medium'
                     : 'text-gray-500 hover:text-gray-700 border-transparent'
-                }`}
+                  }`}
               >
                 {tab}
               </button>
@@ -199,7 +204,7 @@ function About() {
             <h3 className="text-xl font-semibold mb-4">Attachments</h3>
           )}
         </div>
-      </div>  
+      </div>
     </div>
   );
 }
@@ -278,10 +283,10 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     const key = `Question ${questionIndex + 1} DigitalSkillsAssessment`;
 
     // Collect all responses for this question across all offices
-    const responses = officesData.map((data:any) => Number(data[key] || 0));
+    const responses = officesData.map((data: any) => Number(data[key] || 0));
 
     // Calculate score using the new method
-    const total = responses.reduce((sum:any, value:any) => sum + value, 0);
+    const total = responses.reduce((sum: any, value: any) => sum + value, 0);
     const maxPossible = responses.length * 5;
     const score = (total / maxPossible) * 100;
 
@@ -299,7 +304,7 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   // Helper function to calculate TRI scores
   const calculateTRIScore = (category: string, questionCount: number) => {
     // Get all responses for this category across all offices
-    const responses = officesData.flatMap((data:any) => {
+    const responses = officesData.flatMap((data: any) => {
       return Array.from({ length: questionCount }, (_, i) => {
         const key = `${category} ${i + 1}`;
         return Number(data[key] || 0);
@@ -307,7 +312,7 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     });
 
     // Calculate score like Python implementation
-    const total = responses.reduce((sum:any, value:any) => sum + value, 0);
+    const total = responses.reduce((sum: any, value: any) => sum + value, 0);
     console.log(category);
     console.log('Responses:', responses);
     console.log('Total:', total);
@@ -331,9 +336,9 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
 
   // Calculate final TRI score
   const triScore = (
-    optimismScore + 
-    innovativenessScore + 
-    discomfortScore + 
+    optimismScore +
+    innovativenessScore +
+    discomfortScore +
     insecurityScore
   ) / 4;
 

@@ -1,5 +1,5 @@
 import Data from "@/assets/data/eReadinessSurveyData.json";
-
+import { getLGUDigitalSkillsAverage } from './PerLGU';
 interface SurveyData {
     [key: string]: any[]; // Each section is an array of entries
 }
@@ -771,4 +771,45 @@ export const getRegion10ITReadinessDetailedScores = (): Record<string, number> =
     // Simply use the default parameters of getProvinceITReadinessDetailedScores 
     // which includes all Region 10 provinces
     return getProvinceITReadinessDetailedScores();
+};
+
+
+export const getCamiguinMunicipalitiesDigitalSkillsAverage = (): number => {
+    // List of all Camiguin municipalities
+    const camiguinMunicipalities = [
+        "SAGAY",
+        "CATARMAN",
+        "GUINSILIBAN",
+        "MAHINOG",
+        "MAMBAJAO"
+    ];
+
+    // Get individual scores for each municipality
+    let totalScore = 0;
+    let validMunicipalityCount = 0;
+
+    console.log("=== CALCULATING CAMIGUIN MUNICIPALITIES AVERAGE ===");
+
+    // Calculate score for each municipality
+    camiguinMunicipalities.forEach(municipality => {
+        const score = getLGUDigitalSkillsAverage(municipality);
+        console.log(`${municipality}: ${score}%`);
+
+        // Only count non-zero scores in the average
+        if (score > 0) {
+            totalScore += score;
+            validMunicipalityCount++;
+        }
+    });
+
+    // Calculate the overall average for Camiguin
+    const overallAverage = validMunicipalityCount > 0
+        ? totalScore / validMunicipalityCount
+        : 0;
+
+    console.log(`Total score: ${totalScore}`);
+    console.log(`Valid municipalities: ${validMunicipalityCount}`);
+    console.log(`Overall average: ${overallAverage.toFixed(2)}%`);
+
+    return Number(overallAverage.toFixed(2));  // Return the calculated average
 };

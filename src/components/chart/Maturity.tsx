@@ -140,7 +140,7 @@ const TechnologyCard: React.FC<CardProps> = ({ title, percentage, barData, maxBa
           font: {
             size: 8
           },
-          callback: function(_value: any, index: number) {
+          callback: function (_value: any, index: number) {
             const labels = barData.labels;
             const label = labels[index];
             return label.length > 20 ? label.substr(0, 20) + '...' : label;
@@ -170,7 +170,7 @@ const TechnologyCard: React.FC<CardProps> = ({ title, percentage, barData, maxBa
   return (
     <div className={`bg-white ${colSpanClass} p-2 rounded-lg border border-border flex flex-col`}>
       <h3 className="text-center text-xs font-medium mb-2">{title}</h3>
-      
+
       {/* Larger Gauge Chart */}
       <div className="relative h-24 flex justify-center mb-2">
         <div className="w-full h-full">
@@ -180,7 +180,7 @@ const TechnologyCard: React.FC<CardProps> = ({ title, percentage, barData, maxBa
           {percentage.toFixed(2)}%
         </div>
       </div>
-      
+
       {/* Bar Chart */}
       <div className="mt-2" style={{ height: `${barHeight}px` }}>
         <Bar data={barChartData} options={barOptions} />
@@ -189,8 +189,8 @@ const TechnologyCard: React.FC<CardProps> = ({ title, percentage, barData, maxBa
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ 
-  data, 
+const Dashboard: React.FC<DashboardProps> = ({
+  data,
   chartColors = ['#0036C5', '#ECC217'],
   cardLayouts = {
     digitalSkills: { title: "DIGITAL SKILLS ASSESSMENT", colSpan: 1 },
@@ -199,27 +199,27 @@ const Dashboard: React.FC<DashboardProps> = ({
     itReadiness: { title: "IT Readiness Assessment", colSpan: 1 }
   },
   gridColsBase
-}:any) => {
-  
+}: any) => {
+
   // Define state for processed data
   const [digitalSkillsData, setDigitalSkillsData] = useState<CategoryData>({
     labels: [],
     values: [],
     percentage: 0
   });
-  
+
   const [triData, setTRIData] = useState<CategoryData>({
     labels: [],
     values: [],
     percentage: 0
   });
-  
+
   const [ictData, setICTData] = useState<CategoryData>({
     labels: [],
     values: [],
     percentage: 0
   });
-  
+
   const [itReadinessData, setITReadinessData] = useState<CategoryData>({
     labels: [],
     values: [],
@@ -232,25 +232,45 @@ const Dashboard: React.FC<DashboardProps> = ({
     processTRIData();
     processITReadinessData();
     processICTChangeData();
+
+    setTimeout(() => {
+      // This timeout ensures all data is processed before logging
+      console.log('=== OVERALL ASSESSMENT SCORES ===');
+      console.log('DIGITAL SKILLS ASSESSMENT:', digitalSkillsData.percentage.toFixed(2) + '%');
+      console.log('LGU Office Employee\'s Technology Readiness Index:', triData.percentage.toFixed(2) + '%');
+      console.log('IT Readiness Assessment:', itReadinessData.percentage.toFixed(2) + '%');
+      console.log('ICT Change Management:', ictData.percentage.toFixed(2) + '%');
+
+      // Calculate total score
+      const totalScore = (
+        digitalSkillsData.percentage +
+        triData.percentage +
+        itReadinessData.percentage +
+        ictData.percentage
+      ) / 4;
+
+      console.log('TOTAL SCORE:', totalScore.toFixed(2) + '%');
+      console.log('===============================');
+    }, 500);
   }, [data]);
 
   // Get all offices data from the JSON
   const getAllOfficesData = () => {
     const allowedOffices = ["Mayors Office", "Other Offices", "HR Office", "IT Office"];
     const allOffices: any = [];
-    
+
     // Iterate through allowed offices only
     Object.keys(data).forEach(officeKey => {
       if (allowedOffices.includes(officeKey) && data[officeKey] && Array.isArray(data[officeKey])) {
         allOffices.push(...data[officeKey]);
       }
     });
-  
+
     let changeReadinessSum = 0;
     let changeReadinessCount = 0;
-  
+
     allOffices.forEach((office: any) => {
-      if (office["OFFICE SELECTION"] === "MIS\/IT" ) {
+      if (office["OFFICE SELECTION"] === "MIS\/IT") {
         // Convert values to numbers and sum only if they're valid numbers
         const values = [
           Number(office["BASIC IT READINESS 1"]) || 0,
@@ -262,7 +282,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
 
         ];
-        
+
         values.forEach(value => {
           if (value > 0) {
             changeReadinessSum += value;
@@ -271,16 +291,16 @@ const Dashboard: React.FC<DashboardProps> = ({
         });
       }
     });
-  
+
     // Calculate average with 2 decimal places
-    const changeReadinessAverage = changeReadinessCount > 0 
-      ? Number((changeReadinessSum / changeReadinessCount).toFixed(2)) 
-      : 0;
-  
+    // const changeReadinessAverage = changeReadinessCount > 0
+    //   ? Number((changeReadinessSum / changeReadinessCount).toFixed(2))
+    //   : 0;
+
     console.log('Change Readiness Sum:', changeReadinessSum);
     console.log('Change Readiness Count:', changeReadinessCount);
-    console.log('Change Readiness Score:',  (changeReadinessSum/(changeReadinessCount*5)) *100 );
-  
+    console.log('Change Readiness Score:', (changeReadinessSum / (changeReadinessCount * 5)) * 100);
+
     return allOffices;
   };
 
@@ -292,11 +312,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Helper function to calculate percentage score
   const calculatePercentageScore = (responses: number[]) => {
     if (responses.length === 0) return 0;
-    
+
     const totalResponses = responses.length;
     const totalPossibleScore = totalResponses * 5; // Maximum score of 5 per response
     const actualScore = responses.reduce((sum, value) => sum + value, 0);
-    
+
     // Return percentage: (actualScore / totalPossibleScore) × 100
     return (actualScore / totalPossibleScore) * 100;
   };
@@ -309,7 +329,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       "General computer or office productivity software use",
       "Use of collaborative platforms",
       "Use of communication apps",
-      "Use of social media", 
+      "Use of social media",
       "Content creation",
       "Cybersecurity awareness",
       "Programming, web, and app dev...",
@@ -317,7 +337,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     ];
 
     const allOfficesData = getAllOfficesData();
-    
+
     if (allOfficesData.length === 0) {
       console.error("No office data found");
       return;
@@ -329,11 +349,11 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       // Collect all responses for this question across all offices
       const responses = allOfficesData
-        .map((office:any) => Number(office[key] || 0))
-        .filter((value:any) => !isNaN(value));
+        .map((office: any) => Number(office[key] || 0))
+        .filter((value: any) => !isNaN(value));
 
       // Calculate score using the same method as About.tsx
-      const total = responses.reduce((sum:any, value:any) => sum + value, 0);
+      const total = responses.reduce((sum: any, value: any) => sum + value, 0);
       const maxPossible = responses.length * 5;
       const score = (total / maxPossible) * 100;
 
@@ -353,7 +373,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Process Technology Readiness Index data
   const processTRIData = () => {
     const allOfficesData = getAllOfficesData();
-    
+
     if (allOfficesData.length === 0) {
       console.error("No office data found");
       return;
@@ -362,15 +382,15 @@ const Dashboard: React.FC<DashboardProps> = ({
     // Helper function to calculate TRI scores
     const calculateTRIScore = (category: string, questionCount: number) => {
       // Get all responses for this category across all offices
-      const responses = allOfficesData.flatMap((office:any) => {
+      const responses = allOfficesData.flatMap((office: any) => {
         return Array.from({ length: questionCount }, (_, i) => {
           const key = `${category} ${i + 1}`;
           return Number(office[key] || 0);
         });
-      }).filter((value:any )=> !isNaN(value));
+      }).filter((value: any) => !isNaN(value));
 
       // Calculate score like About.tsx implementation
-      const total = responses.reduce((sum:any, value:any) => sum + value, 0);
+      const total = responses.reduce((sum: any, value: any) => sum + value, 0);
       const maxPossible = responses.length * 5;
       return (total / maxPossible) * 100;
     };
@@ -383,9 +403,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     // Calculate final TRI score
     const triScore = (
-      optimismScore + 
-      innovativenessScore + 
-      discomfortScore + 
+      optimismScore +
+      innovativenessScore +
+      discomfortScore +
       insecurityScore
     ) / 4;
 
@@ -399,12 +419,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Process IT Readiness data
   const processITReadinessData = () => {
     const allOfficesData = getAllOfficesData();
-    
+
     if (allOfficesData.length === 0) {
       console.error("No office data found");
       return;
     }
-  
+
     // Define categories and their questions
     const categories = {
       "BASIC IT READINESS": Array.from({ length: 4 }, (_, i) => `BASIC IT READINESS ${i + 1}`),
@@ -430,42 +450,42 @@ const Dashboard: React.FC<DashboardProps> = ({
       "INTEGRATION": Array.from({ length: 3 }, (_, i) => `Integration and Interoperability ${i + 1}`),
       "DISASTER RECOVERY": Array.from({ length: 3 }, (_, i) => `Disaster Recovery and Business Continuity ${i + 1}`)
     };
-  
+
     const categoryScores = Object.entries(categories).map(([category, keys]) => {
       const validValues: number[] = [];
-      
+
       keys.forEach(key => {
-        allOfficesData.forEach((office:any) => {
+        allOfficesData.forEach((office: any) => {
           if (office && office[key] !== undefined && office[key] !== null) {
             validValues.push(parseFloat(office[key]) || 0);
           }
         });
       });
-      
+
       return {
         category,
         score: calculatePercentageScore(validValues)
       };
     });
-  
+
     const overallPercentage = categoryScores.reduce((sum, cat) => sum + cat.score, 0) / categoryScores.length;
-  
+
     setITReadinessData({
       labels: categoryScores.map(cat => cat.category),
       values: categoryScores.map(cat => cat.score),
       percentage: overallPercentage
     });
   };
-  
+
   // Process ICT Change Management data
   const processICTChangeData = () => {
     const allOfficesData = getAllOfficesData();
-    
+
     if (allOfficesData.length === 0) {
       console.error("No office data found");
       return;
     }
-  
+
     const categories = {
       "CHANGE READINESS": Array.from({ length: 3 }, (_, i) => `CHANGE READINESS ${i + 1}`),
       "CHANGE LEADERSHIP": Array.from({ length: 2 }, (_, i) => `CHANGE LEADERSHIP ${i + 1}`),
@@ -479,26 +499,26 @@ const Dashboard: React.FC<DashboardProps> = ({
       "SUSTAINABILITY": Array.from({ length: 3 }, (_, i) => `Sustainability and Embedding ${i + 1}`),
       "FINANCIAL": Array.from({ length: 5 }, (_, i) => `Costs or Financial ${i + 1}`)
     };
-  
+
     const categoryScores = Object.entries(categories).map(([category, keys]) => {
       const validValues: number[] = [];
-      
+
       keys.forEach(key => {
-        allOfficesData.forEach((office:any) => {
+        allOfficesData.forEach((office: any) => {
           if (office && office[key] !== undefined && office[key] !== null) {
             validValues.push(parseFloat(office[key]) || 0);
           }
         });
       });
-      
+
       return {
         category,
         score: calculatePercentageScore(validValues)
       };
     });
-  
+
     const overallPercentage = categoryScores.reduce((sum, cat) => sum + cat.score, 0) / categoryScores.length;
-  
+
     setICTData({
       labels: categoryScores.map(cat => cat.category),
       values: categoryScores.map(cat => cat.score),
@@ -508,62 +528,62 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Alternate colors for bar charts
   const getAlternatingColors = (count: number) => {
-    return Array(count).fill(0).map((_, index) => 
+    return Array(count).fill(0).map((_, index) =>
       index % 2 === 0 ? chartColors[0] : chartColors[1]
     );
   };
 
   return (
-  
-     
-        <div className={`grid grid-cols-${gridColsBase} md:grid-cols-1  gap-4`}>
-          <TechnologyCard 
-            title={cardLayouts.digitalSkills?.title || "DIGITAL SKILLS ASSESSMENT"}
-            percentage={digitalSkillsData.percentage} 
-            barData={{
-              labels: digitalSkillsData.labels,
-              values: digitalSkillsData.values,
-              colors: getAlternatingColors(digitalSkillsData.labels.length)
-            }}
-            colSpan={cardLayouts.digitalSkills?.colSpan || 1}
-          />
 
-          <TechnologyCard 
-            title={cardLayouts.tri?.title || "LGU Office Employee's Technology Readiness Index"}
-            percentage={triData.percentage} 
-            barData={{
-              labels: triData.labels,
-              values: triData.values,
-              colors: getAlternatingColors(triData.labels.length)
-            }} 
-            colSpan={cardLayouts.tri?.colSpan || 1}
-          />
-          
-          <TechnologyCard 
-            title={cardLayouts.ictChange?.title || "ICT Change Management"}
-            percentage={ictData.percentage} 
-            barData={{
-              labels: ictData.labels,
-              values: ictData.values,
-              colors: getAlternatingColors(ictData.labels.length)
-            }} 
-            colSpan={cardLayouts.ictChange?.colSpan || 1}
-          />
 
-          <TechnologyCard 
-            title={cardLayouts.itReadiness?.title || "IT Readiness Assessment"}
-            percentage={itReadinessData.percentage} 
-            barData={{
-              labels: itReadinessData.labels,
-              values: itReadinessData.values,
-              colors: getAlternatingColors(itReadinessData.labels.length)
-            }} 
-            maxBarValue={100}
-            colSpan={cardLayouts.itReadiness?.colSpan || 1}
-          />
-        </div>
-     
- 
+    <div className={`grid grid-cols-${gridColsBase} md:grid-cols-1  gap-4`}>
+      <TechnologyCard
+        title={cardLayouts.digitalSkills?.title || "DIGITAL SKILLS ASSESSMENT"}
+        percentage={digitalSkillsData.percentage}
+        barData={{
+          labels: digitalSkillsData.labels,
+          values: digitalSkillsData.values,
+          colors: getAlternatingColors(digitalSkillsData.labels.length)
+        }}
+        colSpan={cardLayouts.digitalSkills?.colSpan || 1}
+      />
+
+      <TechnologyCard
+        title={cardLayouts.tri?.title || "LGU Office Employee's Technology Readiness Index"}
+        percentage={triData.percentage}
+        barData={{
+          labels: triData.labels,
+          values: triData.values,
+          colors: getAlternatingColors(triData.labels.length)
+        }}
+        colSpan={cardLayouts.tri?.colSpan || 1}
+      />
+
+      <TechnologyCard
+        title={cardLayouts.ictChange?.title || "ICT Change Management"}
+        percentage={ictData.percentage}
+        barData={{
+          labels: ictData.labels,
+          values: ictData.values,
+          colors: getAlternatingColors(ictData.labels.length)
+        }}
+        colSpan={cardLayouts.ictChange?.colSpan || 1}
+      />
+
+      <TechnologyCard
+        title={cardLayouts.itReadiness?.title || "IT Readiness Assessment"}
+        percentage={itReadinessData.percentage}
+        barData={{
+          labels: itReadinessData.labels,
+          values: itReadinessData.values,
+          colors: getAlternatingColors(itReadinessData.labels.length)
+        }}
+        maxBarValue={100}
+        colSpan={cardLayouts.itReadiness?.colSpan || 1}
+      />
+    </div>
+
+
   );
 };
 
