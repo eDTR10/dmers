@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title } from 'chart.js';
 import { Pie, Line } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +24,7 @@ const calculateAverage = (values: number[]) => {
 const calculatePercentageScore = (responses: number[]) => {
   const validResponses = responses.filter(val => val !== null && val !== undefined);
   if (validResponses.length === 0) return 0;
-
+  
   const totalPossibleScore = validResponses.length * 5; // Maximum score of 5 per response
   const actualScore = validResponses.reduce((sum, value) => sum + value, 0);
   return (actualScore / totalPossibleScore) * 100;
@@ -34,7 +34,7 @@ const calculatePercentageScore = (responses: number[]) => {
 const processLGUData = (officesData: any[]) => {
   // Find IT Office data for this LGU
   const lguName = officesData[0]["LGU Name"];
-  const itOfficeData: any = Data["IT Office"].find((data: any) => data["LGU Name"] === lguName);
+  const itOfficeData:any = Data["IT Office"].find((data:any) => data["LGU Name"] === lguName);
 
   // Digital Skills Assessment - Updated calculation
   const digitalSkillsKeys = Array.from({ length: 10 }, (_, i) => `Question ${i + 1} DigitalSkillsAssessment`);
@@ -171,13 +171,7 @@ function Camiguin() {
 
   const navigate = useNavigate();
   const [lguData, setLguData] = useState([]);
-  const [categoryData, setCategoryData] = useState<{
-    labels: string[];
-    datasets: { label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number }[];
-  }>({
-    labels: [],
-    datasets: []
-  });
+  const [categoryData, setCategoryData] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
 
 
@@ -210,7 +204,7 @@ function Camiguin() {
       }, {} as Record<string, any[]>);
 
       // For each LGU, pass the array of responses directly to processLGUData
-      const combinedLGUs = Object.entries(groupedData).map(([lguName, officeData]: any) => {
+      const combinedLGUs = Object.entries(groupedData).map(([lguName, officeData]:any) => {
         const scores = processLGUData(officeData);
         return {
           name: lguName,
@@ -222,17 +216,8 @@ function Camiguin() {
         };
       });
 
-      // Console log the IT Readiness and Change Management scores for each LGU
-      console.log("=== IT Readiness and Change Management Scores ===");
-      combinedLGUs.forEach(lgu => {
-        console.log(`${lgu.name}:`, {
-          "IT Readiness Score": `${lgu.itReadiness}%`,
-          "Change Management Score": `${lgu.changeManagement}%`
-        });
-      });
-
       // Sort by score and add ranking
-      const sortedLgus: any = [...combinedLGUs]
+      const sortedLgus:any = [...combinedLGUs]
         .sort((a, b) => b.score - a.score)
         .map((lgu, index) => ({
           ...lgu,
@@ -244,7 +229,7 @@ function Camiguin() {
       // Update category data for line chart
       const categories = {
         labels: ['Digital Skills', 'Tech Readiness', 'IT Readiness', 'Change Management', 'Overall Score'],
-        datasets: sortedLgus.map((lgu: any, index: any) => ({
+        datasets: sortedLgus.map((lgu:any, index:any) => ({
           label: lgu.name,
           data: [
             lgu.digitalSkills,
@@ -258,13 +243,13 @@ function Camiguin() {
           tension: 0.1
         }))
       };
-
+      
       setCategoryData(categories);
     }
   }, []);
 
   // Filter LGUs based on search term but keep original ranking
-  const filteredLGUs = lguData.filter((lgu: any) =>
+  const filteredLGUs = lguData.filter((lgu:any) => 
     lgu.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -272,10 +257,10 @@ function Camiguin() {
 
   // Modified pie chart data to use only two colors alternately
   const pieData = {
-    labels: lguData.map((lgu: any) => lgu.name),
+    labels: lguData.map((lgu:any) => lgu.name),
     datasets: [
       {
-        data: lguData.map((lgu: any) => lgu.score),
+        data: lguData.map((lgu:any) => lgu.score),
         backgroundColor: lguData.map((_, index) => index % 2 === 0 ? '#0036C5' : '#ECC217'),
         borderWidth: 1,
       },
@@ -283,7 +268,7 @@ function Camiguin() {
   };
 
   // Handle LGU click
-  const handleLguClick = (lgu: any) => {
+  const handleLguClick = (lgu:any) => {
     navigate(`/camiguin/${lgu.name}`, {
       state: {
         lguName: lgu.name,
@@ -291,12 +276,12 @@ function Camiguin() {
       }
     });
   };
-  ;
-  const filteredData: any = Object.keys(Data).reduce((acc: any, key: any) => {
+;
+  const filteredData:any = Object.keys(Data).reduce((acc:any, key:any) => {
     // Check if the current key contains an array
     if (Array.isArray(Data[key])) {
-      acc[key] = Data[key].filter((item: any) =>
-        item.Province === "Camiguin"
+      acc[key] = Data[key].filter((item: any) => 
+        item.Province === "Camiguin" 
       );
     } else {
       // If not an array, keep the original value
@@ -304,7 +289,7 @@ function Camiguin() {
     }
 
 
-
+    
     return acc;
   }, {} as typeof Data);
 
@@ -312,10 +297,10 @@ function Camiguin() {
     <div className="min-h-full w-full flex items-center justify-center">
       <div className="p-5 w-[95%] h-[90%] flex flex-col bg-card/25 border border-border rounded-lg">
         <h1 className="py-4 px-2 rounded-sm text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">Camiguin Province</h1>
-
-        <div className="flex flex-row space-x-4">
+        
+        <div className="flex flex-row md:flex-col md:items-center space-x-4 md:gap-10">
           {/* Left side - Table */}
-          <div className="w-[30%] border border-gray-200 rounded-lg overflow-hidden">
+          <div className="w-[30%] md:w-full border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-white">
               {/* Search bar */}
               <div className="flex items-center p-4 border-b border-gray-200">
@@ -333,91 +318,91 @@ function Camiguin() {
                     </svg>
                   </div>
                 </div>
-
+                
               </div>
-
+              
               {/* Modified table header to include ranking */}
               <div className="grid grid-cols-5 border-b border-gray-200 text-sm font-medium text-gray-700">
                 <div className="p-4 col-span-1 flex items-center">
                   Rank
                 </div>
                 <div className="p-4 col-span-2 flex items-center">
-                  LGU Name
+                  LGU Name 
                   <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
                 <div className="p-4 col-span-2 flex items-center">
-                  Score (%)
+                  Score (%) 
                   <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </div>
-
+              
               {/* Modified table body with click handler */}
               <div className="divide-y divide-gray-200 max-h-[500px] overflow-y-auto">
-                {filteredLGUs.map((lgu: any) => (
-                  <div
-                    key={lgu.name}
+                {filteredLGUs.map((lgu:any) => (
+                  <div 
+                    key={lgu.name} 
                     className="cursor-pointer grid grid-cols-5 hover:bg-gray-50"
                     onClick={() => handleLguClick(lgu)}
                   >
                     <div className="p-4 col-span-1">{lgu.rank}</div>
                     <div className="p-4 col-span-2 truncate">{lgu.name}</div>
-                    <div className="p-4 col-span-2">{lgu.score}</div>
+                    <div className="p-4 col-span-2">{lgu.score} %</div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-
+          
           {/* Right side - Charts */}
-          <div className="w-[70%] space-y-4">
+          <div className="w-[70%] md:w-full flex flex-col gap-5 justify-center  space-y-4 md:space-y-0">
 
-
-            <Dashboard
-              data={filteredData}
-              title="Digital Skills Card Full Width"
-              gridColsBase={1}
-
-            />
+            
+          <Dashboard
+        data={filteredData } 
+        title="Digital Skills Card Full Width" 
+        gridColsBase={1}
+        
+      />
             {/* Pie Chart */}
             <div className="bg-white p-4 border border-gray-200 rounded-lg">
               <h2 className="text-lg font-medium mb-4">LGUs Assessment Scores</h2>
               <div className="h-[300px] flex justify-center">
-                <Pie
-                  data={pieData}
-                  options={{
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        labels: {
-                          boxWidth: 12
-                        }
-                      },
-                      // Enable the plugin specifically for this chart
-                      datalabels: {
-                        display: true,
-                        color: '#fff',
-                        font: {
-                          weight: 'bold',
-                          size: 10
-                        },
-                        formatter: (value) => {
-                          return `${Math.round(value)}%`;
-                        },
-                        align: 'center',
-                        anchor: 'center'
-                      }
-                    }
-                  }}
-                  plugins={[ChartDataLabels]} // Add plugin locally
-                />
+              <Pie 
+  data={pieData} 
+  options={{
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          boxWidth: 12
+        }
+      },
+      // Enable the plugin specifically for this chart
+      datalabels: {
+        display: true,
+        color: '#fff',
+        font: {
+          weight: 'bold',
+          size: 10
+        },
+        formatter: (value) => {
+          return `${Math.round(value)}%`;
+        },
+        align: 'center',
+        anchor: 'center'
+      }
+    }
+  }}
+  plugins={[ChartDataLabels]} // Add plugin locally
+/>
               </div>
             </div>
-
+            
             {/* Line Chart */}
             <div className="bg-white p-4 border border-gray-200 rounded-lg">
               <h2 className="text-lg font-medium mb-4">LGUs Assessment Category Scores</h2>
@@ -432,7 +417,7 @@ function Camiguin() {
                           beginAtZero: true,
                           max: 100,
                           ticks: {
-                            callback: function (value) {
+                            callback: function(value) {
                               return value + '%';
                             }
                           }
@@ -447,7 +432,7 @@ function Camiguin() {
                         },
                         tooltip: {
                           callbacks: {
-                            label: function (context) {
+                            label: function(context) {
                               return context.dataset.label + ': ' + context.raw + '%';
                             }
                           }

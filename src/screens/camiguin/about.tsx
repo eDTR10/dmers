@@ -1,7 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import Data from './../../assets/data/eReadinessSurveyData.json';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
 
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 function About() {
   const { lguName } = useParams();
@@ -12,6 +33,9 @@ function About() {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [detailedScores, setDetailedScores] = useState<any>(null);
   const [digitalScore, setDigitalScore] = useState<any>({});
+  const [selectedAssessment, setSelectedAssessment] = useState('DIGITAL SKILLS ASSESSMENT');
+  const [officesWithData, setOfficesWithData] = useState<string[]>([]);
+  const [selectedOffice, setSelectedOffice] = useState<string>("All Offices");
 
   // Update the useEffect to use the new scores
   useEffect(() => {
@@ -37,17 +61,22 @@ function About() {
           // Use the new total score calculation
           setScore(scores.totalScore);
 
-          setDigitalScore(scores.componentScores)
+          setDigitalScore(scores.componentScores);
 
-          console.log('=== OVERALL ASSESSMENT SCORES ===');
-          console.log('DIGITAL SKILLS ASSESSMENT:', scores.componentScores.digitalSkills + '%');
-          console.log('LGU Office Employee\'s Technology Readiness Index:', scores.componentScores.techReadiness + '%');
-          console.log('IT Readiness Assessment:', scores.componentScores.itReadiness + '%');
-          console.log('ICT Change Management:', scores.componentScores.changeManagement + '%');
-          console.log('TOTAL SCORE:', scores.totalScore + '%');
-          console.log('===============================');
           console.log('Component Scores:', scores.componentScores.digitalSkills);
         }
+        
+        // Get all offices that have data for this LGU
+        const availableOffices = ["Mayor's Office", "HR Office", "IT Office"];
+        
+        // Add other offices dynamically
+        const otherOfficesData = Data["Other Offices"].filter(
+          item => item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
+        );
+        
+        const uniqueOtherOffices = [...new Set(otherOfficesData.map(item => item["Office Name"]))];
+        
+        setOfficesWithData(["All Offices", ...availableOffices, ...uniqueOtherOffices]);
       }
     }
   }, [lguName, location]);
@@ -63,12 +92,10 @@ function About() {
       case "ICT CHANGE MANAGEMENT":
         return digitalScore.changeManagement;
 
-
       default:
         break;
     }
   }
-
 
   if (!lguInfo) {
     return (
@@ -82,37 +109,202 @@ function About() {
     );
   }
 
-  console.log();
+  // Get data specific to the selected office
+  const getOfficeData = (officeName: string) => {
+    if (officeName === "All Offices") {
+      return getChartData();
+    }
+    
+    // Map our friendly office names to data keys
+    const officeDataKey = officeName === "Mayor's Office" ? "Mayors Office" : officeName;
+    
+    let officeData:any;
+    let Datas:any=  Data
+    if (["Mayor's Office", "HR Office", "IT Office"].includes(officeName)) {
+      officeData = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
+        (item:any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+      );
+    } else {
+      // Find in Other Offices with matching Office Name
+      officeData = Datas["Other Offices"].find(
+        (item:any) => 
+          item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
+          item["Office Name"] === officeName
+      );
+    }
+    
+    if (!officeData) return getChartData(); // Fallback
+    
+    // Process data based on assessment type
+    let labels = [];
+    let data = [];
+    
+    switch (selectedAssessment) {
+      case 'DIGITAL SKILLS ASSESSMENT':
+        labels = assData[0].data;
+        data = labels.map((_:any, idx:any) => {
+          const key = `Question ${idx + 1} DigitalSkillsAssessment`;
+          const value = officeData[key] || 0;
+          return (Number(value) / 5) * 100; // Convert to percentage
+        });
+        break;
+      case 'TECHNOLOGY READINESS INDEX':
+        labels = assData[1].data;
+        data = labels.map((label:any) => {
+          const category = label.split(' ')[0]; // Extract category name
+          const questionCount = parseInt(label.match(/\((\d+) questions\)/)?.[1] || "0");
+          
+          // Calculate score for this category from this office
+          let total = 0;
+          for (let i = 1; i <= questionCount; i++) {
+            const key = `${category} ${i}`;
+            total += Number(officeData[key] || 0);
+          }
+          
+          return (total / (questionCount * 5)) * 100; // Convert to percentage
+        });
+        break;
+      // IT Readiness and Change Management handled by IT Office only
+      default:
+        return getChartData();
+    }
+    
+    return {
+      labels,
+      datasets: [
+        {
+          label: `${selectedAssessment} - ${officeName}`,
+          data,
+          borderColor: '#0036C5',
+          backgroundColor: 'rgba(0, 54, 197, 0.1)',
+          tension: 0.4
+        }
+      ]
+    };
+  };
 
-  // Update the renderAssessmentContent function to handle the new sections
-  const renderAssessmentContent = () => (
-    <div className="space-y-4">
-      {detailedScores && assData.map((section) => (
-        <div key={section.title} className="border rounded-lg overflow-hidden">
-          <button
-            onClick={() => {
-              setExpandedSections(prev =>
-                prev.includes(section.title)
-                  ? prev.filter(title => title !== section.title)
-                  : [...prev, section.title]
-              );
+  const getChartData = () => {
+    let labels = [];
+    let data = [];
+
+    switch (selectedAssessment) {
+      case 'DIGITAL SKILLS ASSESSMENT':
+        labels = assData[0].data;
+        data = detailedScores.digitalSkills.scores.map((s: any) => s.score);
+        break;
+      case 'TECHNOLOGY READINESS INDEX':
+        labels = assData[1].data;
+        data = detailedScores.technologyReadiness.categories.map((c: any) => c.average);
+        break;
+      case 'IT READINESS ASSESSMENT':
+        labels = assData[2].data;
+        data = detailedScores.itReadiness.categories.map((c: any) => c.score);
+        break;
+      case 'ICT CHANGE MANAGEMENT':
+        labels = assData[3].data;
+        data = detailedScores.changeManagement.categories.map((c: any) => c.score);
+        break;
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: selectedAssessment,
+          data,
+          borderColor: '#0036C5',
+          backgroundColor: 'rgba(0, 54, 197, 0.1)',
+          tension: 0.4
+        }
+      ]
+    };
+  };
+
+  const renderAssessmentContent = () => {
+    if (!detailedScores) return null;
+
+    const chartData = selectedOffice === "All Offices" ? getChartData() : getOfficeData(selectedOffice);
+    
+    // Determine if office selection should be enabled for current assessment
+
+
+    return (
+      <div className="space-y-4  w-full">
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          <label className="font-medium">Select Assessment:</label>
+          <select
+            value={selectedAssessment}
+            onChange={(e) => {
+              setSelectedAssessment(e.target.value);
+              // Reset to All Offices when changing assessment type
+              setSelectedOffice("All Offices");
             }}
-            className="w-full p-4 flex justify-between items-center bg-[#0036C5] text-white hover:bg-[#002799] transition-colors"
+            className="border rounded-md p-2"
           >
-            <h3 className="text-xl font-semibold">{section.title}</h3>
-            <span className="text-2xl">
-              {Percentage(section.title)}% &nbsp; &nbsp;
-              {expandedSections.includes(section.title) ? '−' : '+'}
-            </span>
-          </button>
+            {assData.map((section:any) => (
+              <option key={section.title} value={section.title}>
+                {section.title}
+              </option>
+            ))}
+          </select>
+          
+      
+        </div>
 
-          {expandedSections.includes(section.title) && (
-            <ul className="p-4 bg-white space-y-2">
-              {section.data.map((item, index) => {
-                let score;
-                switch (section.title) {
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Detailed Scores - Left side */}         
+          {/* Chart - Right side */}
+          <div className="w-full grid grid-cols-2 md:grid-cols-1 gap-5 order-1 md:order-2">
+            <div className=" col-span-1">
+              <div className="bg-white p-4 rounded-lg shadow flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">{selectedAssessment} Score</h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedOffice === "All Offices" ? "Average across all offices" : `For ${selectedOffice}`}
+                  </p>
+                </div>
+                <div className="relative w-24 h-24 ">
+                  <svg className="w-full h-full md:hidden transform -rotate-90">
+                    <circle cx="48" cy="48" r="40" fill="none" stroke="#eee" strokeWidth="8" />
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      fill="none"
+                      stroke={
+                        Percentage(selectedAssessment) >= 80 ? '#10B981' :
+                        Percentage(selectedAssessment) >= 60 ? '#0036C5' :
+                        Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
+                      }
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray={`${(Percentage(selectedAssessment) / 100) * 251.2} 251.2`}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl font-bold" style={{ 
+                      color: 
+                        Percentage(selectedAssessment) >= 80 ? '#10B981' :
+                        Percentage(selectedAssessment) >= 60 ? '#0036C5' :
+                        Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
+                    }}>
+                      {Percentage(selectedAssessment)?.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full  order-2 md:order-1">
+            <h3 className="text-xl font-semibold mt-10 mb-4">Detailed Scores</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2  gap-4  overflow-y-auto pr-2">
+              {assData.find((section:any) => section.title === selectedAssessment)?.data.map((item:any, index:any) => {
+                let score = 0;
+                let responses = [];
+                
+                switch (selectedAssessment) {
                   case "DIGITAL SKILLS ASSESSMENT":
                     score = detailedScores.digitalSkills.scores[index]?.score;
+                    responses = detailedScores.digitalSkills.scores[index]?.responses || [];
                     break;
                   case "TECHNOLOGY READINESS INDEX":
                     score = detailedScores.technologyReadiness.categories[index]?.average;
@@ -123,38 +315,336 @@ function About() {
                   case "ICT CHANGE MANAGEMENT":
                     score = detailedScores.changeManagement?.categories[index]?.score;
                     break;
-                  default:
-                    score = 0;
                 }
 
+                // Determine color based on score
+                const scoreColor = score >= 80 ? 'bg-blue-50 border-blue-300' :
+                                 score >= 50 ? ' bg-yellow-100/40 border-yellow-200' :
+                                 score >= 30 ? 'bg-red-100 border-red-200' : 'bg-red-50 border-red-200';
+
                 return (
-                  <li
-                    key={index}
-                    className="flex items-center justify-between text-gray-700 hover:text-[#0036C5] transition-colors p-2"
+                  <div 
+                    key={index} 
+                    
+                    className={`p-4 rounded-lg border ${scoreColor} hover:shadow-md cursor-pointer transition-all duration-200`}
                   >
-                    <span>{item}</span>
-                    <span className="font-semibold">{score?.toFixed(2)}%</span>
-                  </li>
+                    <div className="text-sm text-gray-600 font-medium">{item}</div>
+                    <div className="text-lg font-semibold text-[#0036C5]">{score?.toFixed(2)}%</div>
+                    
+                    {/* Show per-office responses for Digital Skills if available */}
+                    {selectedAssessment === 'DIGITAL SKILLS ASSESSMENT' && responses?.length > 0 && (
+                      <div className="mt-2">
+                        <button 
+
+                        onClick={() => {
+                      // Toggle detailed view for this item
+                      setExpandedSections(prev => 
+                        prev.includes(`${selectedAssessment}-${index}`) 
+                          ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
+                          : [...prev, `${selectedAssessment}-${index}`]
+                      );
+                    }}
+                          
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Details' : 'View Office Responses'}
+                        </button>
+                        
+                        {expandedSections.includes(`${selectedAssessment}-${index}`) && (
+                          <div className="mt-2 text-xs bg-white p-2 rounded border">
+                            <table className="w-full">
+                              <thead>
+                                <tr>
+                                  <th className="text-left py-1">Office</th>
+                                  <th className="text-right py-1">Rating (1-5)</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {officesWithData.filter(o => o !== "All Offices").map((office, i) => {
+                                  // Map our friendly office names to data keys
+                                  const officeDataKey = office === "Mayor's Office" ? "Mayors Office" : office;
+                                  
+                                  // Get response for this office
+                                  let officeResponse = 0;
+                                  let Datas:any=  Data
+                                  if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
+                                    const data = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
+                                      (item:any)=> item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+                                    );
+
+
+                                    
+                                    officeResponse = Number(data?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
+                                  } else {
+                                    // Find in Other Offices with matching Office Name
+                                    let data:any = Data["Other Offices"].find(
+                                      item => 
+                                        item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
+                                        item["Office Name"] === office
+                                    );
+                                    officeResponse = Number(data?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
+                                  }
+                                  
+                                  return (
+                                    <tr key={i} className="border-t">
+                                      <td className="py-1">{office}</td>
+                                      <td className="text-right py-1">
+                                        <div className="flex items-center justify-end">
+                                          <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div 
+                                              className="bg-blue-600 h-2 rounded-full" 
+                                              style={{ width: `${(officeResponse/5)*100}%` }}
+                                            ></div>
+                                          </div>
+                                          {officeResponse}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {selectedAssessment === 'TECHNOLOGY READINESS INDEX' && (
+  <div className="mt-2">
+    <button 
+      onClick={() => {
+        setExpandedSections(prev => 
+          prev.includes(`${selectedAssessment}-${index}`) 
+            ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
+            : [...prev, `${selectedAssessment}-${index}`]
+        );
+      }}
+      className="text-xs text-blue-600 hover:underline"
+    >
+      {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Questions' : 'View Questions'}
+    </button>
+    
+    {expandedSections.includes(`${selectedAssessment}-${index}`) && (
+      <div className="mt-2 text-xs bg-white p-2 rounded border">
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className="text-left py-1">Question</th>
+              <th className="text-right py-1">Average Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assData[1].questions[item.split(' ')[0]].map((question:any, qIndex:any) => {
+              const avgRating = calculateAverageRating(officesWithData, item.split(' ')[0], qIndex + 1, lguInfo);
+              const percentage = (avgRating / 5) * 100;
+              
+              return (
+                <>
+                  <tr key={qIndex} className="border-t hover:bg-gray-50 cursor-pointer"
+                    onClick={() => {
+                      setExpandedSections(prev => 
+                        prev.includes(`${selectedAssessment}-${index}-${qIndex}`) 
+                          ? prev.filter(id => id !== `${selectedAssessment}-${index}-${qIndex}`)
+                          : [...prev, `${selectedAssessment}-${index}-${qIndex}`]
+                      );
+                    }}
+                  >
+                    <td className="py-1">{question}</td>
+                    <td className="text-right py-1">
+                      <div className="flex items-center justify-end">
+                        <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        {percentage.toFixed(1)}%
+                      </div>
+                    </td>
+                  </tr>
+                  {expandedSections.includes(`${selectedAssessment}-${index}-${qIndex}`) && (
+                    <tr>
+                      <td colSpan={2}>
+                        <div className="pl-4 py-2 bg-gray-50">
+                          <table className="w-full">
+                            <thead>
+                              <tr>
+                                <th className="text-left py-1">Office</th>
+                                <th className="text-right py-1">Rating (0-5)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {officesWithData.filter(o => o !== "All Offices").map((office, i) => {
+                                const officeDataKey = office === "Mayor's Office" ? "Mayors Office" : office;
+                                let officeResponse = 0;
+                                let Datas:any=  Data
+                                
+                                if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
+                                  const data = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
+                                    (item:any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+                                  );
+                                  officeResponse = Number(data?.[`${item.split(' ')[0]} ${qIndex + 1}`] || 0);
+                                } else {
+                                  let data:any = Data["Other Offices"].find(
+                                    item => 
+                                      item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
+                                      item["Office Name"] === office
+                                  );
+                                  officeResponse = Number(data?.[`${item.split(' ')[0]} ${qIndex + 1}`] || 0);
+                                }
+                                
+                                return (
+                                  <tr key={i} className="border-t">
+                                    <td className="py-1">{office}</td>
+                                    <td className="text-right py-1">
+                                      <div className="flex items-center justify-end">
+                                        <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                          <div 
+                                            className="bg-blue-600 h-2 rounded-full" 
+                                            style={{ width: `${(officeResponse/5)*100}%` }}
+                                          ></div>
+                                        </div>
+                                        {officeResponse}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+)}
+                    {(selectedAssessment === 'IT READINESS ASSESSMENT' || selectedAssessment === 'ICT CHANGE MANAGEMENT') && (
+                      <div className="mt-2">
+                        <button 
+                          onClick={() => {
+                            setExpandedSections(prev => 
+                              prev.includes(`${selectedAssessment}-${index}`) 
+                                ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
+                                : [...prev, `${selectedAssessment}-${index}`]
+                            );
+                          }}
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Questions' : 'View Questions'}
+                        </button>
+                        
+                        {expandedSections.includes(`${selectedAssessment}-${index}`) && (
+                          <div className="mt-2 text-xs bg-white p-2 rounded border">
+                            <table className="w-full">
+                              <thead>
+                                <tr>
+                                  <th className="text-left py-1">Question</th>
+                                  <th className="text-right py-1">Score</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {assData.find((section:any) => section.title === selectedAssessment)
+                                  ?.questions[item.split(' (')[0]]
+                                  .map((question:any, qIndex:any) => {
+                                    let score = 0;
+                                    const dataKey = selectedAssessment === 'IT READINESS ASSESSMENT' 
+                                      ? `${item.split(' (')[0].replace(/ /g, ' ')} ${qIndex + 1}`
+                                      : `${item.split(' (')[0]} ${qIndex + 1}`;
+                                    
+                                    let itOfficeData:any = Data["IT Office"].find(
+                                      data => data["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+                                    );
+                                    
+                                    score = Number(itOfficeData?.[dataKey] || 0);
+                                    const percentage = (score / 5) * 100;
+                                    
+                                    return (
+                                      <tr key={qIndex} className="border-t">
+                                        <td className="py-1">{question}</td>
+                                        <td className="text-right py-1">
+                                          <div className="flex items-center justify-end">
+                                            <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                              <div 
+                                                className="bg-blue-600 h-2 rounded-full" 
+                                                style={{ width: `${percentage}%` }}
+                                              ></div>
+                                            </div>
+                                            {percentage.toFixed(1)}%
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
-            </ul>
-          )}
+            </div>
+          </div>
+            </div>
+            <div className="bg-white p-6 col-span-1 rounded-lg shadow">
+              <div className="h-[500px]">
+                <Line
+                  data={chartData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                          display: true,
+                          text: 'Score (%)'
+                        }
+                      }
+                    },
+                    plugins: {
+                      legend: {
+                        position: 'top' as const,
+                      },
+                      title: {
+                        display: true,
+                        text: `${selectedAssessment} Breakdown${selectedOffice !== "All Offices" ? ` - ${selectedOffice}` : ''}`
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* Interactive Score Display */}
+            
+          </div>
         </div>
-      ))}
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-full w-full py-10 flex items-center justify-center">
-      <div className="p-5 h-full  w-[95%] flex flex-col bg-card/25 border border-border border-b-0 rounded-lg">
+      <div className="p-5 h-full relative  w-[95%] flex flex-col bg-card/25 border border-border border-b-0 rounded-lg   ">
         <h1 className="py-4 px-2 text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
           {`${lguInfo["LGU Name"]}, ${lguInfo.Province}`}
+
+       
         </h1>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex relative  justify-between md:items-end items-center md:flex-col">
+        <div className="bg-white h-full p-6 rounded-lg border border-border ">
+          <div className="flex relative h-full justify-between md:items-end items-center md:flex-col">
             <div className="w-[80%] md:w-full ">
-              <div className="grid grid-cols-3  gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 <InfoCard span="2" label="Municipality" value={lguInfo["LGU Name"]} />
                 <InfoCard label="Income Class" value={lguInfo["Income Class"]} />
                 <InfoCard label="Mayor" value={lguInfo.Mayor} />
@@ -169,21 +659,26 @@ function About() {
                 </div>
               </div>
             </div>
-            <h1 className=' absolute right-0 bottom-0 md:left-0 font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
+            <div className=' w-[30%] md:w-full  h-full flex flex-col  items-center md:items-end '>
             <ScoreCircle score={Math.round(score)} />
+              <h1 className=' absolute bottom-0 right-0 md:left-0  font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
+            
+            
+            </div>
           </div>
         </div>
 
-        <div className="border-b w-[50%] border-gray-200">
+        <div className="border-b w-full border-gray-200">
           <nav className="flex">
             {['About', 'Assessment', 'Attachments'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${activeTab === tab
+                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${
+                  activeTab === tab
                     ? 'border-b-2 border-red-500 text-red-500 font-medium'
                     : 'text-gray-500 hover:text-gray-700 border-transparent'
-                  }`}
+                }`}
               >
                 {tab}
               </button>
@@ -191,13 +686,20 @@ function About() {
           </nav>
         </div>
 
-        <div className="py-4 md:py-6 w-[50%] md:w-full">
+        <div className="py-4 md:py-6 w-full md:w-full">
           {activeTab === 'About' && (
-            <div className="flex flex-col md:flex-row">
-              <div className="w-full md:w-[70%] pr-0 md:pr-6">
-                <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
-              </div>
-            </div>
+             <div className="w-full  md:flex-row grid grid-cols-6">
+             <div className=" col-span-4 pr-0 md:pr-6">
+               <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
+             </div>
+             <div className=" col-span-2  flex justify-center items-start">
+               <img 
+                 src={lguInfo["Logo"]} 
+                 alt={`${lguInfo["LGU Name"]} Logo`}
+                 className=" w-full max-w-[200px] mt-[10%] h-auto object-contain"
+               />
+             </div>
+           </div>
           )}
           {activeTab === 'Assessment' && renderAssessmentContent()}
           {activeTab === 'Attachments' && (
@@ -209,7 +711,6 @@ function About() {
   );
 }
 
-
 const InfoCard = ({ label, value, span }: any) => (
   <div className={`bg-gray-50 p-4 rounded-lg border border-border col-span-${span ? span : 1}`}>
     <div className="text-sm text-gray-700 mb-1">{label}</div>
@@ -218,18 +719,18 @@ const InfoCard = ({ label, value, span }: any) => (
 );
 
 const ScoreCircle = ({ score }: { score: number }) => (
-  <div className="w-1/2 flex flex-col items-center justify-center">
+  <div className=" flex flex-col items-center ">
     <div className="text-xl font-bold text-[#0036C5] mb-2">Score</div>
     <div className="relative w-40 h-40">
       <svg className="w-full h-full transform -rotate-90">
-        <circle cx="80" cy="80" r="70" fill="none" stroke="#ecc216" strokeWidth="8" />
+        <circle cx="80" cy="80" r="70" fill="none" stroke="#ecc216" strokeWidth="15" />
         <circle
           cx="80"
           cy="80"
           r="70"
           fill="none"
           stroke="#0036C5"
-          strokeWidth="8"
+          strokeWidth="15"
           strokeLinecap="round"
           strokeDasharray={`${(score / 100) * 439.6} 439.6`}
         />
@@ -243,7 +744,6 @@ const ScoreCircle = ({ score }: { score: number }) => (
   </div>
 );
 
-// Update the calculation function
 const calculatePercentageScore = (responses: number[]) => {
   // Sum all values
   const total = responses.reduce((sum, value) => sum + Number(value || 0), 0);
@@ -260,116 +760,104 @@ const calculateAverage = (values: number[]) => {
   return validValues.length ? validValues.reduce((a, b) => a + b, 0) / validValues.length : 0;
 };
 
-
-
 // Update the Digital Skills calculation inside calculateLGUDetailedScores
 const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   // Get IT Office data specifically for IT Readiness and Change Management
-  const itOfficeData: any = Data["IT Office"].find(data => data["LGU Name"] === lguName);
+ 
 
-  // Get data from all offices for other assessments
-  let Datas: any = Data;
-  let officesData: any = offices.map((office: any) =>
-    Datas[office].filter((data: any) => data["LGU Name"] === lguName)
-  );
-
-  officesData = Object.values(officesData).flat();
+  // Get data from all offices including Other Offices
+  let officesData: any[] = [];
+  let Datas:any=  Data
+  // Add data from main offices (Mayor's, HR, IT)
+  offices.forEach(office => {
+    if (office === "Other Offices") {
+      const otherOfficesData = Data[office]?.filter(data => 
+        data["LGU Name"]?.toUpperCase() === lguName?.toUpperCase()
+      );
+      if (otherOfficesData) {
+        officesData.push(...otherOfficesData);
+      }
+    } else {
+      const officeData = Datas[office]?.filter((data:any) => 
+        data["LGU Name"]?.toUpperCase() === lguName?.toUpperCase()
+      );
+      if (officeData) {
+        officesData.push(...officeData);
+      }
+    }
+  });
 
   console.log('Offices Data:', officesData);
   if (!officesData.length) return null;
 
-  // Get all responses for each Digital Skills question
+  // Calculate Digital Skills scores
   const digitalSkillsScores = Array.from({ length: 10 }, (_, questionIndex) => {
     const key = `Question ${questionIndex + 1} DigitalSkillsAssessment`;
-
-    // Collect all responses for this question across all offices
-    const responses = officesData.map((data: any) => Number(data[key] || 0));
-
-    // Calculate score using the new method
-    const total = responses.reduce((sum: any, value: any) => sum + value, 0);
+    const responses = officesData.map(data => Number(data[key] || 0));
+    const total = responses.reduce((sum, value) => sum + value, 0);
     const maxPossible = responses.length * 5;
     const score = (total / maxPossible) * 100;
 
     return {
       question: key,
-      responses, // Store raw responses for reference
-      score: score
+      responses,
+      score
     };
   });
 
-  const digitalSkillsAverage = calculateAverage(
-    digitalSkillsScores.map(item => item.score)
-  );
-
-  // Helper function to calculate TRI scores
+  // Calculate Technology Readiness scores
   const calculateTRIScore = (category: string, questionCount: number) => {
-    // Get all responses for this category across all offices
-    const responses = officesData.flatMap((data: any) => {
-      return Array.from({ length: questionCount }, (_, i) => {
-        const key = `${category} ${i + 1}`;
-        return Number(data[key] || 0);
-      });
-    });
-
-    // Calculate score like Python implementation
-    const total = responses.reduce((sum: any, value: any) => sum + value, 0);
-    console.log(category);
-    console.log('Responses:', responses);
-    console.log('Total:', total);
+    const responses = officesData.flatMap(data => 
+      Array.from({ length: questionCount }, (_, i) => Number(data[`${category} ${i + 1}`] || 0))
+    );
+    const total = responses.reduce((sum, value) => sum + value, 0);
     const maxPossible = responses.length * 5;
     return (total / maxPossible) * 100;
   };
 
-  // Calculate scores for each TRI category
   const optimismScore = calculateTRIScore('Optimism', 10);
   const innovativenessScore = calculateTRIScore('Innovativeness', 7);
   const discomfortScore = calculateTRIScore('Discomfort', 10);
   const insecurityScore = calculateTRIScore('Insecurity', 9);
 
-  // Create categories array for display
   const triCategories = [
-    { category: 'OPTIMISM', average: optimismScore },
-    { category: 'INNOVATIVENESS', average: innovativenessScore },
-    { category: 'DISCOMFORT', average: discomfortScore },
-    { category: 'INSECURITY', average: insecurityScore }
+    { category: 'Optimism', average: optimismScore },
+    { category: 'Innovativeness', average: innovativenessScore },
+    { category: 'Discomfort', average: discomfortScore },
+    { category: 'Insecurity', average: insecurityScore }
   ];
 
-  // Calculate final TRI score
-  const triScore = (
-    optimismScore +
-    innovativenessScore +
-    discomfortScore +
-    insecurityScore
-  ) / 4;
+  // Get IT Office data specifically for IT Readiness and Change Management
+  const itOfficeDataSpecific: any = Data["IT Office"].find(data => data["LGU Name"] === lguName);
 
   // Calculate IT Readiness scores using only IT Office data
   const itReadinessCategories = {
     "BASIC IT READINESS": Array.from({ length: 4 }, (_, i) => `BASIC IT READINESS ${i + 1}`),
-    "IT GOVERNANCE": Array.from({ length: 3 }, (_, i) => `IT GOVERNANCE FRAMEWORK & POLICIES ${i + 1}`),
-    "IT STRATEGY": Array.from({ length: 3 }, (_, i) => `IT STRATEGY AND ALIGNMENT ${i + 1}`),
-    "IT POLICIES": Array.from({ length: 3 }, (_, i) => `IT POLICIES AND PROCEDURES ${i + 1}`),
+    "IT GOVERNANCE FRAMEWORK & POLICIES": Array.from({ length: 3 }, (_, i) => `IT GOVERNANCE FRAMEWORK & POLICIES ${i + 1}`),
+    "IT STRATEGY AND ALIGNMENT": Array.from({ length: 3 }, (_, i) => `IT STRATEGY AND ALIGNMENT ${i + 1}`),
+    "IT POLICIES AND PROCEDURES": Array.from({ length: 3 }, (_, i) => `IT POLICIES AND PROCEDURES ${i + 1}`),
     "RISK MANAGEMENT": Array.from({ length: 3 }, (_, i) => `RISK MANAGEMENT ${i + 1}`),
-    "PERFORMANCE MEASUREMENT": Array.from({ length: 3 }, (_, i) => `IT PERFORMANCE MEASUREMENT AND REPORTING ${i + 1}`),
+    "IT PERFORMANCE MEASUREMENT AND REPORTING": Array.from({ length: 3 }, (_, i) => `IT PERFORMANCE MEASUREMENT AND REPORTING ${i + 1}`),
     "IT INVESTMENT MANAGEMENT": Array.from({ length: 3 }, (_, i) => `IT INVESTMENT MANAGEMENT ${i + 1}`),
     "VENDOR MANAGEMENT": Array.from({ length: 3 }, (_, i) => `VENDOR MANAGEMENT ${i + 1}`),
-    "IT SECURITY": Array.from({ length: 3 }, (_, i) => `IT SECURITY AND COMPLIANCE ${i + 1}`),
-    "ICT ORGANIZATION": Array.from({ length: 3 }, (_, i) => `ICT Organizational Structure and Skills ${i + 1}`),
-    "AUDIT & ASSURANCE": Array.from({ length: 3 }, (_, i) => `Audit and Assurance ${i + 1}`),
-    "NETWORK": Array.from({ length: 2 }, (_, i) => `Network Infrastructure ${i + 1}`),
-    "STORAGE": Array.from({ length: 3 }, (_, i) => `Servers and Storage ${i + 1}`),
-    "VIRTUALIZATION": Array.from({ length: 3 }, (_, i) => `Virtualization ${i + 1}`),
-    "BACKUP": Array.from({ length: 3 }, (_, i) => `Data Backup and Recovery ${i + 1}`),
-    "SCALABILITY & ELASTICITY": Array.from({ length: 3 }, (_, i) => `Scalability and Elasticity ${i + 1}`),
+    "IT SECURITY AND COMPLIANCE": Array.from({ length: 3 }, (_, i) => `IT SECURITY AND COMPLIANCE ${i + 1}`),
+    "ICT Organizational Structure and Skills": Array.from({ length: 3 }, (_, i) => `ICT Organizational Structure and Skills ${i + 1}`),
+    "Audit and Assurance": Array.from({ length: 3 }, (_, i) => `Audit and Assurance ${i + 1}`),
+    "Network Infrastructure": Array.from({ length: 2 }, (_, i) => `Network Infrastructure ${i + 1}`),
+    "Servers and Storage": Array.from({ length: 3 }, (_, i) => `Servers and Storage ${i + 1}`),
+    "Virtualization": Array.from({ length: 3 }, (_, i) => `Virtualization ${i + 1}`),
+    "Data Backup and Recovery": Array.from({ length: 3 }, (_, i) => `Data Backup and Recovery ${i + 1}`),
+    "Scalability and Elasticity": Array.from({ length: 3 }, (_, i) => `Scalability and Elasticity ${i + 1}`),
 
-    "SECURITY MEASURES": Array.from({ length: 4 }, (_, i) => `Security Measures ${i + 1}`),
-    "MONITORING": Array.from({ length: 3 }, (_, i) => `Monitoring and Performance ${i + 1}`),
-    "COMPLIANCE": Array.from({ length: 3 }, (_, i) => `Compliance and Governance ${i + 1}`),
-    "INTEGRATION": Array.from({ length: 3 }, (_, i) => `Integration and Interoperability ${i + 1}`),
-    "DISASTER RECOVERY": Array.from({ length: 3 }, (_, i) => `Disaster Recovery and Business Continuity ${i + 1}`)
+    "Security Measures": Array.from({ length: 4 }, (_, i) => `Security Measures ${i + 1}`),
+    "Monitoring and Performance": Array.from({ length: 3 }, (_, i) => `Monitoring and Performance ${i + 1}`),
+    "Compliance and Governance": Array.from({ length: 3 }, (_, i) => `Compliance and Governance ${i + 1}`),
+    "Integration and Interoperability": Array.from({ length: 3 }, (_, i) => `Integration and Interoperability ${i + 1}`),
+    "Disaster Recovery and Business Continuity": Array.from({ length: 3 }, (_, i) => `Disaster Recovery and Business Continuity ${i + 1}`)
   };
 
   const itReadinessScores = Object.entries(itReadinessCategories).map(([category, keys]) => {
-    const scores = keys.map(key => Number(itOfficeData?.[key] || 0));
+    const scores = keys.map(key => Number(itOfficeDataSpecific?.[key] || 0));
     const categoryScore = calculatePercentageScore(scores);
 
     return {
@@ -391,19 +879,19 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     "CHANGE READINESS": Array.from({ length: 3 }, (_, i) => `CHANGE READINESS ${i + 1}`),
     "CHANGE LEADERSHIP": Array.from({ length: 2 }, (_, i) => `CHANGE LEADERSHIP ${i + 1}`),
     "CHANGE COMMUNICATION": Array.from({ length: 3 }, (_, i) => `CHANGE COMMUNICATION ${i + 1}`),
-    "IMPACT ASSESSMENT": Array.from({ length: 3 }, (_, i) => `CHANGE IMPACT ASSESSMENT ${i + 1}`),
+    "CHANGE IMPACT ASSESSMENT": Array.from({ length: 3 }, (_, i) => `CHANGE IMPACT ASSESSMENT ${i + 1}`),
     "STAKEHOLDER ENGAGEMENT": Array.from({ length: 3 }, (_, i) => `STAKEHOLDER ENGAGEMENT ${i + 1}`),
-    "PLANNING & EXECUTION": Array.from({ length: 3 }, (_, i) => `CHANGE PLANNING AND EXECUTION ${i + 1}`),
-    "TRAINING": Array.from({ length: 3 }, (_, i) => `TRAINING AND DEVELOPMENT ${i + 1}`),
-    "RESISTANCE MANAGEMENT": Array.from({ length: 3 }, (_, i) => `Resistance Management ${i + 1}`),
-    "EVALUATION": Array.from({ length: 3 }, (_, i) => `Evaluation and Continuous Improvement ${i + 1}`),
-    "SUSTAINABILITY": Array.from({ length: 3 }, (_, i) => `Sustainability and Embedding ${i + 1}`),
-    "FINANCIAL": Array.from({ length: 5 }, (_, i) => `Costs or Financial ${i + 1}`)
+    "CHANGE PLANNING AND EXECUTION": Array.from({ length: 3 }, (_, i) => `CHANGE PLANNING AND EXECUTION ${i + 1}`),
+    "TRAINING AND DEVELOPMENT": Array.from({ length: 3 }, (_, i) => `TRAINING AND DEVELOPMENT ${i + 1}`),
+    "Resistance Management": Array.from({ length: 3 }, (_, i) => `Resistance Management ${i + 1}`),
+    "Evaluation and Continuous Improvement": Array.from({ length: 3 }, (_, i) => `Evaluation and Continuous Improvement ${i + 1}`),
+    "Sustainability and Embedding": Array.from({ length: 3 }, (_, i) => `Sustainability and Embedding ${i + 1}`),
+    "Costs or Financial": Array.from({ length: 5 }, (_, i) => `Costs or Financial ${i + 1}`)
   };
 
   const changeManagementScores = Object.entries(changeManagementCategories).map(([category, keys]) => ({
     category,
-    score: calculatePercentageScore(keys.map(key => Number(itOfficeData?.[key] || 0)))
+    score: calculatePercentageScore(keys.map(key => Number(itOfficeDataSpecific?.[key] || 0)))
   }));
 
   // Calculate averages
@@ -419,16 +907,16 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   const changeManagementAverage = calculateAverage(changeManagementScores.map(cat => cat.score));
 
   // Calculate total score using all four components
-  const totalScore = (digitalSkillsAverage + triScore + itReadinessAverage + changeManagementAverage) / 4;
+  const totalScore = (calculateAverage(digitalSkillsScores.map(item => item.score)) + (optimismScore + innovativenessScore + discomfortScore + insecurityScore) / 4 + itReadinessAverage + changeManagementAverage) / 4;
 
   return {
     digitalSkills: {
       scores: digitalSkillsScores,
-      average: digitalSkillsAverage
+      average: calculateAverage(digitalSkillsScores.map(item => item.score))
     },
     technologyReadiness: {
-      categories: categoryAverages,
-      average: triScore
+      categories: triCategories,
+      average: (optimismScore + innovativenessScore + discomfortScore + insecurityScore) / 4
     },
     itReadiness: {
       categories: itReadinessScores,
@@ -440,8 +928,8 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
     },
     totalScore: Math.round(totalScore * 100) / 100,
     componentScores: {
-      digitalSkills: Math.round(digitalSkillsAverage * 100) / 100,
-      techReadiness: Math.round(triScore * 100) / 100,
+      digitalSkills: Math.round(calculateAverage(digitalSkillsScores.map(item => item.score)) * 100) / 100,
+      techReadiness: Math.round((optimismScore + innovativenessScore + discomfortScore + insecurityScore) / 4 * 100) / 100,
       itReadiness: Math.round(itReadinessAverage * 100) / 100,
       changeManagement: Math.round(changeManagementAverage * 100) / 100
     }
@@ -449,7 +937,7 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
 };
 
 // Update the assessment data structure to include IT Readiness and Change Management
-const assData = [
+const assData:any = [
   {
     title: "DIGITAL SKILLS ASSESSMENT",
     data: [
@@ -468,56 +956,129 @@ const assData = [
   {
     title: "TECHNOLOGY READINESS INDEX",
     data: [
-      "OPTIMISM (10 questions)",
-      "INNOVATIVENESS (7 questions)",
-      "DISCOMFORT (10 questions)",
-      "INSECURITY (9 questions)"
-    ]
+      "Optimism (10 questions)",
+      "Innovativeness (7 questions)",
+      "Discomfort (10 questions)",
+      "Insecurity (9 questions)"
+    ],
+    questions: {
+      "Optimism": Array.from({ length: 10 }, (_, i) => `Q${i + 1}`),
+      "Innovativeness": Array.from({ length: 7 }, (_, i) => `Q${i + 1}`),
+      "Discomfort": Array.from({ length: 10 }, (_, i) => `Q${i + 1}`),
+      "Insecurity": Array.from({ length: 9 }, (_, i) => `Q${i + 1}`)
+    }
   },
   {
     title: "IT READINESS ASSESSMENT",
     data: [
-      "BASIC IT READINESS",
-      "IT GOVERNANCE FRAMEWORK & POLICIES",
-      "IT STRATEGY AND ALIGNMENT",
-      "IT POLICIES AND PROCEDURES",
-      "RISK MANAGEMENT",
-      "IT PERFORMANCE MEASUREMENT AND REPORTING",
-      "IT INVESTMENT MANAGEMENT",
-      "VENDOR MANAGEMENT",
-      "IT SECURITY AND COMPLIANCE",
-      "ICT ORGANIZATIONAL STRUCTURE AND SKILLS",
-      "AUDIT AND ASSURANCE",
-      "NETWORK INFRASTRUCTURE",
-      "SERVERS AND STORAGE",
-      "VIRTUALIZATION",
-      "DATA BACKUP AND RECOVERY",
-      "SCALABILITY AND ELASTICITY",
-      "SECURITY MEASURES",
-      "MONITORING AND PERFORMANCE",
-      "COMPLIANCE AND GOVERNANCE",
-      "INTEGRATION AND INTEROPERABILITY",
-      "DISASTER RECOVERY AND BUSINESS CONTINUITY"
-    ]
+      "BASIC IT READINESS (4 questions)",
+      "IT GOVERNANCE FRAMEWORK & POLICIES (3 questions)",
+      "IT STRATEGY AND ALIGNMENT (3 questions)",
+      "IT POLICIES AND PROCEDURES (3 questions)",
+      "RISK MANAGEMENT (3 questions)",
+      "IT PERFORMANCE MEASUREMENT AND REPORTING (3 questions)",
+      "IT INVESTMENT MANAGEMENT (3 questions)",
+      "VENDOR MANAGEMENT (3 questions)",
+      "IT SECURITY AND COMPLIANCE (3 questions)",
+      "ICT Organizational Structure and Skills (3 questions)",
+      "Audit and Assurance (3 questions)",
+      "Network Infrastructure (2 questions)",
+      "Servers and Storage (3 questions)",
+      "Virtualization (3 questions)",
+      "Data Backup and Recovery (3 questions)",
+      "Scalability and Elasticity (3 questions)",
+      "Security Measures (4 questions)",
+      "Monitoring and Performance (3 questions)",
+      "Compliance and Governance (3 questions)",
+      "Integration and Interoperability (3 questions)",
+      "Disaster Recovery and Business Continuity (3 questions)"
+    ],
+    questions: {
+      "BASIC IT READINESS": Array.from({ length: 4 }, (_, i) => `Q${i + 1}`),
+      "IT GOVERNANCE FRAMEWORK & POLICIES": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "IT STRATEGY AND ALIGNMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "IT POLICIES AND PROCEDURES": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "RISK MANAGEMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "IT PERFORMANCE MEASUREMENT AND REPORTING": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "IT INVESTMENT MANAGEMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "VENDOR MANAGEMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "IT SECURITY AND COMPLIANCE": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "ICT Organizational Structure and Skills": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Audit and Assurance": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Network Infrastructure": Array.from({ length: 2 }, (_, i) => `Q${i + 1}`),
+      "Servers and Storage": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Virtualization": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Data Backup and Recovery": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Scalability and Elasticity": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Security Measures": Array.from({ length: 4 }, (_, i) => `Q${i + 1}`),
+      "Monitoring and Performance": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Compliance and Governance": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Integration and Interoperability": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Disaster Recovery and Business Continuity": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`)
+    }
   },
   {
     title: "ICT CHANGE MANAGEMENT",
     data: [
-      "CHANGE READINESS",
-      "CHANGE LEADERSHIP",
-      "CHANGE COMMUNICATION",
-      "CHANGE IMPACT ASSESSMENT",
-      "STAKEHOLDER ENGAGEMENT",
-      "CHANGE PLANNING AND EXECUTION",
-      "TRAINING AND DEVELOPMENT",
-      "RESISTANCE MANAGEMENT",
-      "EVALUATION AND CONTINUOUS IMPROVEMENT",
-      "SUSTAINABILITY AND EMBEDDING",
-      "COSTS OR FINANCIAL"
-    ]
+      "CHANGE READINESS (3 questions)",
+      "CHANGE LEADERSHIP (2 questions)",
+      "CHANGE COMMUNICATION (3 questions)",
+      "CHANGE IMPACT ASSESSMENT (3 questions)",
+      "STAKEHOLDER ENGAGEMENT (3 questions)",
+      "CHANGE PLANNING AND EXECUTION (3 questions)",
+      "TRAINING AND DEVELOPMENT (3 questions)",
+      "Resistance Management (3 questions)",
+      "Evaluation and Continuous Improvement (3 questions)",
+      "Sustainability and Embedding (3 questions)",
+      "Costs or Financial (5 questions)"
+    ],
+    questions: {
+      "CHANGE READINESS": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "CHANGE LEADERSHIP": Array.from({ length: 2 }, (_, i) => `Q${i + 1}`),
+      "CHANGE COMMUNICATION": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "CHANGE IMPACT ASSESSMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "STAKEHOLDER ENGAGEMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "CHANGE PLANNING AND EXECUTION": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "TRAINING AND DEVELOPMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Resistance Management": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Evaluation and Continuous Improvement": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Sustainability and Embedding": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
+      "Costs or Financial": Array.from({ length: 5 }, (_, i) => `Q${i + 1}`)
+    }
   }
 ];
 
+// Add this helper function to calculate average rating across offices
+const calculateAverageRating = (offices: string[], category: string, questionNum: number, lguInfo: any) => {
+  let total = 0;
+  let count = 0;
+  
+  offices.filter(o => o !== "All Offices").forEach(office => {
+    let data: any = null;
+    let Datas:any=  Data
+    
+    if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
+      const officeKey = office === "Mayor's Office" ? "Mayors Office" : office;
+      data = Datas[officeKey]?.find((item:any) => 
+        item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+      );
+    } else {
+      data = Data["Other Offices"]?.find(item => 
+        item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
+        item["Office Name"]?.trim() === office.trim()
+      );
+    }
 
+    if (data) {
+      const response = Number(data[`${category} ${questionNum}`] || 0);
+      if (response > 0) {
+        total += response;
+        count++;
+      }
+    }
+  });
+  
+  return count > 0 ? total / count : 0;
+};
 
 export default About;
