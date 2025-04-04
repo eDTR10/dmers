@@ -65,17 +65,17 @@ function About() {
 
           console.log('Component Scores:', scores.componentScores.digitalSkills);
         }
-        
+
         // Get all offices that have data for this LGU
         const availableOffices = ["Mayor's Office", "HR Office", "IT Office"];
-        
+
         // Add other offices dynamically
         const otherOfficesData = Data["Other Offices"].filter(
           item => item["LGU Name"]?.toUpperCase() === selectedLgu.toUpperCase()
         );
-        
+
         const uniqueOtherOffices = [...new Set(otherOfficesData.map(item => item["Office Name"]))];
-        
+
         setOfficesWithData(["All Offices", ...availableOffices, ...uniqueOtherOffices]);
       }
     }
@@ -114,35 +114,35 @@ function About() {
     if (officeName === "All Offices") {
       return getChartData();
     }
-    
+
     // Map our friendly office names to data keys
     const officeDataKey = officeName === "Mayor's Office" ? "Mayors Office" : officeName;
-    
-    let officeData:any;
-    let Datas:any=  Data
+
+    let officeData: any;
+    let Datas: any = Data
     if (["Mayor's Office", "HR Office", "IT Office"].includes(officeName)) {
       officeData = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
-        (item:any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+        (item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
       );
     } else {
       // Find in Other Offices with matching Office Name
       officeData = Datas["Other Offices"].find(
-        (item:any) => 
-          item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
+        (item: any) =>
+          item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() &&
           item["Office Name"] === officeName
       );
     }
-    
+
     if (!officeData) return getChartData(); // Fallback
-    
+
     // Process data based on assessment type
     let labels = [];
     let data = [];
-    
+
     switch (selectedAssessment) {
       case 'DIGITAL SKILLS ASSESSMENT':
         labels = assData[0].data;
-        data = labels.map((_:any, idx:any) => {
+        data = labels.map((_: any, idx: any) => {
           const key = `Question ${idx + 1} DigitalSkillsAssessment`;
           const value = officeData[key] || 0;
           return (Number(value) / 5) * 100; // Convert to percentage
@@ -150,17 +150,17 @@ function About() {
         break;
       case 'TECHNOLOGY READINESS INDEX':
         labels = assData[1].data;
-        data = labels.map((label:any) => {
+        data = labels.map((label: any) => {
           const category = label.split(' ')[0]; // Extract category name
           const questionCount = parseInt(label.match(/\((\d+) questions\)/)?.[1] || "0");
-          
+
           // Calculate score for this category from this office
           let total = 0;
           for (let i = 1; i <= questionCount; i++) {
             const key = `${category} ${i}`;
             total += Number(officeData[key] || 0);
           }
-          
+
           return (total / (questionCount * 5)) * 100; // Convert to percentage
         });
         break;
@@ -168,7 +168,7 @@ function About() {
       default:
         return getChartData();
     }
-    
+
     return {
       labels,
       datasets: [
@@ -220,11 +220,288 @@ function About() {
     };
   };
 
+  function getITSystemsAvailability(lguName: string, data: any) {
+    // Find the IT Office data for the specified LGU
+    const itOfficeData = data["IT Office"].find(
+      (item: any) => item["LGU Name"]?.toUpperCase() === lguName.toUpperCase()
+    );
+
+    if (!itOfficeData) {
+      return { error: "No IT Office data found for this LGU" };
+    }
+
+    // List of all offices to check for system availability
+    const offices = [
+      { prefix: 'a', name: 'Business Permits and Licensing Office (BPLO)' },
+      { prefix: 'b', name: 'Information and Communications Technology (ICT) or Management Information System (MIS) Office' },
+      { prefix: 'c', name: 'Engineering Office' },
+      { prefix: 'd', name: 'Office of the Building Official (OBO)' },
+      { prefix: 'e', name: 'Planning and Development Office' },
+      { prefix: 'f', name: 'Sanitary / Health Office' },
+      { prefix: 'g', name: 'Treasury Office' },
+      { prefix: 'h', name: 'Zoning Office' },
+      { prefix: 'i', name: 'Office of the General Services Officer' },
+      { prefix: 'j', name: 'Bureau of Fire Protection (BFP)' },
+      { prefix: 'k', name: 'Local Civil Registry Office' },
+      { prefix: 'l', name: 'Assessor\'s Office' },
+      { prefix: 'm', name: 'Administrator\'s Office' },
+      { prefix: 'n', name: 'Human Resource and Management Office' },
+      { prefix: 'o', name: 'Budget Office' },
+      { prefix: 'p', name: 'Accountant\'s Office' },
+      { prefix: 'q', name: 'Sangguniang Panlungsod' },
+      { prefix: 'r', name: 'Tourism Office' },
+      { prefix: 's', name: 'Population Office' },
+      { prefix: 't', name: 'Library Office' },
+      { prefix: 'u', name: 'Social Welfare and Development Office' },
+      { prefix: 'v', name: 'Veterinarian\'s Office' },
+      { prefix: 'w', name: 'Agriculturist\'s Office' },
+      { prefix: 'x', name: 'Mayor\'s Office' }
+    ];
+
+    // Extract system availability data for each office
+    const systemsData = offices.map(office => {
+      const baseKey = `Availability of the system per office (if any) - ${office.prefix}. ${office.name}`;
+
+      return {
+        office: office.name,
+        system: itOfficeData[`${baseKey} - System`] || "None",
+        modeOfDeployment: itOfficeData[`${baseKey} - Mode of Deployment`] || "-",
+        availability: itOfficeData[`${baseKey} - Availability`] || "-",
+        integration: itOfficeData[`${baseKey} - Separate System or Integrated with other offices`] || "-",
+        integrationDetails: itOfficeData[`${baseKey} - If Integrated with other offices, Provide roles (endorsing office, system administrator, others)`] || "-"
+      };
+    });
+
+    return {
+      lguName: lguName,
+      systemsData: systemsData.filter(item => item.system && item.system !== "None" && item.system !== "none")
+    };
+  }
+
+  /**
+   * Component to render the IT systems availability table
+   * @param lguName The name of the LGU
+   * @param data The survey data
+   */
+  const ITSystemsTable = ({ lguName, data }: { lguName: string, data: any }) => {
+    const systemsData = getITSystemsAvailability(lguName, data);
+
+    if (systemsData.error) {
+      return (
+        <div className="p-4 bg-red-50 border border-red-200 rounded">
+          <p className="text-red-700">{systemsData.error}</p>
+        </div>
+      );
+    }
+
+    if (!systemsData.systemsData || systemsData.systemsData.length === 0) {
+      return (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+          <p className="text-yellow-700">No systems data available for {systemsData.lguName}</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto">
+
+        <table className="min-w-full bg-white border border-gray-200">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-4 py-2 text-left border-b">Office</th>
+              <th className="px-4 py-2 text-left border-b">System</th>
+              <th className="px-4 py-2 text-left border-b">Mode</th>
+              <th className="px-4 py-2 text-left border-b">Availability</th>
+              <th className="px-4 py-2 text-left border-b">Integration Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            {systemsData.systemsData.map((system: any, index: number) => (
+              <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                <td className="px-4 py-2 border-b">{system.office}</td>
+                <td className="px-4 py-2 border-b">{system.system}</td>
+                <td className="px-4 py-2 border-b">{system.modeOfDeployment}</td>
+                <td className="px-4 py-2 border-b">{system.availability}</td>
+                <td className="px-4 py-2 border-b">
+                  {system.integration}
+                  {system.integration === "Integrated" && system.integrationDetails !== "-" && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      <strong>Integrated with:</strong> {system.integrationDetails}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  // Add this function below the getITSystemsAvailability function
+
+  function getLGUWebsiteInfo(lguName: string, data: any) {
+    // Find the IT Office data for the specified LGU
+    const itOfficeData = data["IT Office"].find(
+      (item: any) => item["LGU Name"]?.toUpperCase() === lguName.toUpperCase()
+    );
+
+    if (!itOfficeData) {
+      return { error: "No IT Office data found for this LGU" };
+    }
+
+    // Extract website and IT infrastructure information
+    return {
+      hasWebsite: itOfficeData["Is there an LGU website?"] || "No data",
+      isIntegrated: itOfficeData["If Yes, are the LGU's systems or online services integrated into the website?"] || "No",
+      integratedServices: itOfficeData["If integrated into the website, please specify which online services or transactions were included."] || "None",
+      usesCloud: itOfficeData["Does your office use cloud-based systems for data storage and processing?"] || "No data",
+      downtimeFrequency: itOfficeData["How often does your office experience system downtime or technical issues?"] || "No data",
+      hasITSupport: itOfficeData["Are there IT personnel available to provide immediate support for system issues?"] || "No data"
+    };
+  }
+
+  /**
+   * Component to render the LGU website and IT infrastructure information
+   * @param lguName The name of the LGU
+   * @param data The survey data
+   */
+  const ITInfrastructureInfo = ({ lguName, data }: { lguName: string, data: any }) => {
+    const websiteInfo = getLGUWebsiteInfo(lguName, data);
+
+    if (websiteInfo.error) {
+      return (
+        <div className="p-4 bg-red-50 border border-red-200 rounded">
+          <p className="text-red-700">{websiteInfo.error}</p>
+        </div>
+      );
+    }
+
+    // Parse integrated services if it's a JSON string
+    let integratedServices = [];
+    try {
+      if (typeof websiteInfo.integratedServices === 'string' && websiteInfo.integratedServices.startsWith('[')) {
+        const parsed = JSON.parse(websiteInfo.integratedServices);
+        integratedServices = parsed.map((service: any) => {
+          const key = Object.keys(service)[0];
+          return service[key];
+        });
+      }
+    } catch (err) {
+      integratedServices = [websiteInfo.integratedServices];
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-4 py-2 text-left border-b" colSpan={2}>IT Infrastructure & Website</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="bg-gray-50">
+              <td className="px-4 py-2 border-b font-medium w-2/5">Is there an LGU website?</td>
+              <td className="px-4 py-2 border-b">
+                {websiteInfo.hasWebsite === "Yes" ? (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Available
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                    Not Available
+                  </span>
+                )}
+              </td>
+            </tr>
+
+            {websiteInfo.hasWebsite === "Yes" && (
+              <>
+                <tr>
+                  <td className="px-4 py-2 border-b font-medium">If Yes, are the LGU's systems or online services integrated into the website?</td>
+                  <td className="px-4 py-2 border-b">
+                    {websiteInfo.isIntegrated === "Yes" ? (
+                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                        Yes
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                        No
+                      </span>
+                    )}
+                  </td>
+                </tr>
+
+                {websiteInfo.isIntegrated === "Yes" && (
+                  <tr className="bg-gray-50">
+                    <td className="px-4 py-2 border-b font-medium">If integrated into the website, please specify which online services or transactions were included.</td>
+                    <td className="px-4 py-2 border-b">
+                      <ul className="list-disc pl-5">
+                        {integratedServices.map((service: string, index: number) => (
+                          <li key={index} className="text-sm">{service}</li>
+                        ))}
+                      </ul>
+                    </td>
+                  </tr>
+                )}
+              </>
+            )}
+
+            <tr>
+              <td className="px-4 py-2 border-b font-medium">Does your office use cloud-based systems for data storage and processing?</td>
+              <td className="px-4 py-2 border-b">
+                {websiteInfo.usesCloud === "Yes" ? (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Yes
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                    No
+                  </span>
+                )}
+              </td>
+            </tr>
+
+            <tr className="bg-gray-50">
+              <td className="px-4 py-2 border-b font-medium">How often does your office experience system downtime or technical issues?</td>
+              <td className="px-4 py-2 border-b">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium
+                ${websiteInfo.downtimeFrequency === "Never" ? "bg-green-100 text-green-800" :
+                    websiteInfo.downtimeFrequency === "Rarely" ? "bg-blue-100 text-blue-800" :
+                      websiteInfo.downtimeFrequency === "Monthly" ? "bg-yellow-100 text-yellow-800" :
+                        websiteInfo.downtimeFrequency === "Weekly" ? "bg-orange-100 text-orange-800" :
+                          "bg-red-100 text-red-800"}`}
+                >
+                  {websiteInfo.downtimeFrequency}
+                </span>
+              </td>
+            </tr>
+
+            <tr>
+              <td className="px-4 py-2 border-b font-medium">Are there IT personnel available to provide immediate support for system issues?</td>
+              <td className="px-4 py-2 border-b">
+                {websiteInfo.hasITSupport === "Yes" ? (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Available
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                    Not Available
+                  </span>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   const renderAssessmentContent = () => {
     if (!detailedScores) return null;
 
     const chartData = selectedOffice === "All Offices" ? getChartData() : getOfficeData(selectedOffice);
-    
+
     // Determine if office selection should be enabled for current assessment
 
 
@@ -241,18 +518,18 @@ function About() {
             }}
             className="border rounded-md p-2"
           >
-            {assData.map((section:any) => (
+            {assData.map((section: any) => (
               <option key={section.title} value={section.title}>
                 {section.title}
               </option>
             ))}
           </select>
-          
-      
+
+
         </div>
 
         <div className="flex flex-col md:flex-row gap-6">
-          {/* Detailed Scores - Left side */}         
+          {/* Detailed Scores - Left side */}
           {/* Chart - Right side */}
           <div className="w-full grid grid-cols-2 md:grid-cols-1 gap-5 order-1 md:order-2">
             <div className=" col-span-1">
@@ -273,8 +550,8 @@ function About() {
                       fill="none"
                       stroke={
                         Percentage(selectedAssessment) >= 80 ? '#10B981' :
-                        Percentage(selectedAssessment) >= 60 ? '#0036C5' :
-                        Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
+                          Percentage(selectedAssessment) >= 60 ? '#0036C5' :
+                            Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
                       }
                       strokeWidth="8"
                       strokeLinecap="round"
@@ -282,11 +559,11 @@ function About() {
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-2xl font-bold" style={{ 
-                      color: 
+                    <span className="text-2xl font-bold" style={{
+                      color:
                         Percentage(selectedAssessment) >= 80 ? '#10B981' :
-                        Percentage(selectedAssessment) >= 60 ? '#0036C5' :
-                        Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
+                          Percentage(selectedAssessment) >= 60 ? '#0036C5' :
+                            Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
                     }}>
                       {Percentage(selectedAssessment)?.toFixed(1)}%
                     </span>
@@ -295,303 +572,303 @@ function About() {
               </div>
 
               <div className="w-full  order-2 md:order-1">
-            <h3 className="text-xl font-semibold mt-10 mb-4">Detailed Scores</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2  gap-4  overflow-y-auto pr-2">
-              {assData.find((section:any) => section.title === selectedAssessment)?.data.map((item:any, index:any) => {
-                let score = 0;
-                let responses = [];
-                
-                switch (selectedAssessment) {
-                  case "DIGITAL SKILLS ASSESSMENT":
-                    score = detailedScores.digitalSkills.scores[index]?.score;
-                    responses = detailedScores.digitalSkills.scores[index]?.responses || [];
-                    break;
-                  case "TECHNOLOGY READINESS INDEX":
-                    score = detailedScores.technologyReadiness.categories[index]?.average;
-                    break;
-                  case "IT READINESS ASSESSMENT":
-                    score = detailedScores.itReadiness?.categories[index]?.score;
-                    break;
-                  case "ICT CHANGE MANAGEMENT":
-                    score = detailedScores.changeManagement?.categories[index]?.score;
-                    break;
-                }
+                <h3 className="text-xl font-semibold mt-10 mb-4">Detailed Scores</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2  gap-4  overflow-y-auto pr-2">
+                  {assData.find((section: any) => section.title === selectedAssessment)?.data.map((item: any, index: any) => {
+                    let score = 0;
+                    let responses = [];
 
-                // Determine color based on score
-                const scoreColor = score >= 80 ? 'bg-blue-50 border-blue-300' :
-                                 score >= 50 ? ' bg-yellow-100/40 border-yellow-200' :
-                                 score >= 30 ? 'bg-red-100 border-red-200' : 'bg-red-50 border-red-200';
+                    switch (selectedAssessment) {
+                      case "DIGITAL SKILLS ASSESSMENT":
+                        score = detailedScores.digitalSkills.scores[index]?.score;
+                        responses = detailedScores.digitalSkills.scores[index]?.responses || [];
+                        break;
+                      case "TECHNOLOGY READINESS INDEX":
+                        score = detailedScores.technologyReadiness.categories[index]?.average;
+                        break;
+                      case "IT READINESS ASSESSMENT":
+                        score = detailedScores.itReadiness?.categories[index]?.score;
+                        break;
+                      case "ICT CHANGE MANAGEMENT":
+                        score = detailedScores.changeManagement?.categories[index]?.score;
+                        break;
+                    }
 
-                return (
-                  <div 
-                    key={index} 
-                    
-                    className={`p-4 rounded-lg border ${scoreColor} hover:shadow-md cursor-pointer transition-all duration-200`}
-                  >
-                    <div className="text-sm text-gray-600 font-medium">{item}</div>
-                    <div className="text-lg font-semibold text-[#0036C5]">{score?.toFixed(2)}%</div>
-                    
-                    {/* Show per-office responses for Digital Skills if available */}
-                    {selectedAssessment === 'DIGITAL SKILLS ASSESSMENT' && responses?.length > 0 && (
-                      <div className="mt-2">
-                        <button 
+                    // Determine color based on score
+                    const scoreColor = score >= 80 ? 'bg-blue-50 border-blue-300' :
+                      score >= 50 ? ' bg-yellow-100/40 border-yellow-200' :
+                        score >= 30 ? 'bg-red-100 border-red-200' : 'bg-red-50 border-red-200';
 
-                        onClick={() => {
-                      // Toggle detailed view for this item
-                      setExpandedSections(prev => 
-                        prev.includes(`${selectedAssessment}-${index}`) 
-                          ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
-                          : [...prev, `${selectedAssessment}-${index}`]
-                      );
-                    }}
-                          
-                          className="text-xs text-blue-600 hover:underline"
-                        >
-                          {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Details' : 'View Office Responses'}
-                        </button>
-                        
-                        {expandedSections.includes(`${selectedAssessment}-${index}`) && (
-                          <div className="mt-2 text-xs bg-white p-2 rounded border">
-                            <table className="w-full">
-                              <thead>
-                                <tr>
-                                  <th className="text-left py-1">Office</th>
-                                  <th className="text-right py-1">Rating (1-5)</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {officesWithData.filter(o => o !== "All Offices").map((office, i) => {
-                                  // Map our friendly office names to data keys
-                                  const officeDataKey = office === "Mayor's Office" ? "Mayors Office" : office;
-                                  
-                                  // Get response for this office
-                                  let officeResponse = 0;
-                                  let Datas:any=  Data
-                                  if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
-                                    const data = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
-                                      (item:any)=> item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
-                                    );
+                    return (
+                      <div
+                        key={index}
 
+                        className={`p-4 rounded-lg border ${scoreColor} hover:shadow-md cursor-pointer transition-all duration-200`}
+                      >
+                        <div className="text-sm text-gray-600 font-medium">{item}</div>
+                        <div className="text-lg font-semibold text-[#0036C5]">{score?.toFixed(2)}%</div>
 
-                                    
-                                    officeResponse = Number(data?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
-                                  } else {
-                                    // Find in Other Offices with matching Office Name
-                                    let data:any = Data["Other Offices"].find(
-                                      item => 
-                                        item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
-                                        item["Office Name"] === office
-                                    );
-                                    officeResponse = Number(data?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
-                                  }
-                                  
-                                  return (
-                                    <tr key={i} className="border-t">
-                                      <td className="py-1">{office}</td>
-                                      <td className="text-right py-1">
-                                        <div className="flex items-center justify-end">
-                                          <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                                            <div 
-                                              className="bg-blue-600 h-2 rounded-full" 
-                                              style={{ width: `${(officeResponse/5)*100}%` }}
-                                            ></div>
-                                          </div>
-                                          {officeResponse}
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {selectedAssessment === 'TECHNOLOGY READINESS INDEX' && (
-  <div className="mt-2">
-    <button 
-      onClick={() => {
-        setExpandedSections(prev => 
-          prev.includes(`${selectedAssessment}-${index}`) 
-            ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
-            : [...prev, `${selectedAssessment}-${index}`]
-        );
-      }}
-      className="text-xs text-blue-600 hover:underline"
-    >
-      {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Questions' : 'View Questions'}
-    </button>
-    
-    {expandedSections.includes(`${selectedAssessment}-${index}`) && (
-      <div className="mt-2 text-xs bg-white p-2 rounded border">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="text-left py-1">Question</th>
-              <th className="text-right py-1">Average Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            {assData[1].questions[item.split(' ')[0]].map((question:any, qIndex:any) => {
-              const avgRating = calculateAverageRating(officesWithData, item.split(' ')[0], qIndex + 1, lguInfo);
-              const percentage = (avgRating / 5) * 100;
-              
-              return (
-                <>
-                  <tr key={qIndex} className="border-t hover:bg-gray-50 cursor-pointer"
-                    onClick={() => {
-                      setExpandedSections(prev => 
-                        prev.includes(`${selectedAssessment}-${index}-${qIndex}`) 
-                          ? prev.filter(id => id !== `${selectedAssessment}-${index}-${qIndex}`)
-                          : [...prev, `${selectedAssessment}-${index}-${qIndex}`]
-                      );
-                    }}
-                  >
-                    <td className="py-1">{question}</td>
-                    <td className="text-right py-1">
-                      <div className="flex items-center justify-end">
-                        <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${percentage}%` }}
-                          ></div>
-                        </div>
-                        {percentage.toFixed(1)}%
-                      </div>
-                    </td>
-                  </tr>
-                  {expandedSections.includes(`${selectedAssessment}-${index}-${qIndex}`) && (
-                    <tr>
-                      <td colSpan={2}>
-                        <div className="pl-4 py-2 bg-gray-50">
-                          <table className="w-full">
-                            <thead>
-                              <tr>
-                                <th className="text-left py-1">Office</th>
-                                <th className="text-right py-1">Rating (0-5)</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {officesWithData.filter(o => o !== "All Offices").map((office, i) => {
-                                const officeDataKey = office === "Mayor's Office" ? "Mayors Office" : office;
-                                let officeResponse = 0;
-                                let Datas:any=  Data
-                                
-                                if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
-                                  const data = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
-                                    (item:any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
-                                  );
-                                  officeResponse = Number(data?.[`${item.split(' ')[0]} ${qIndex + 1}`] || 0);
-                                } else {
-                                  let data:any = Data["Other Offices"].find(
-                                    item => 
-                                      item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
-                                      item["Office Name"] === office
-                                  );
-                                  officeResponse = Number(data?.[`${item.split(' ')[0]} ${qIndex + 1}`] || 0);
-                                }
-                                
-                                return (
-                                  <tr key={i} className="border-t">
-                                    <td className="py-1">{office}</td>
-                                    <td className="text-right py-1">
-                                      <div className="flex items-center justify-end">
-                                        <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                                          <div 
-                                            className="bg-blue-600 h-2 rounded-full" 
-                                            style={{ width: `${(officeResponse/5)*100}%` }}
-                                          ></div>
-                                        </div>
-                                        {officeResponse}
-                                      </div>
-                                    </td>
-                                  </tr>
+                        {/* Show per-office responses for Digital Skills if available */}
+                        {selectedAssessment === 'DIGITAL SKILLS ASSESSMENT' && responses?.length > 0 && (
+                          <div className="mt-2">
+                            <button
+
+                              onClick={() => {
+                                // Toggle detailed view for this item
+                                setExpandedSections(prev =>
+                                  prev.includes(`${selectedAssessment}-${index}`)
+                                    ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
+                                    : [...prev, `${selectedAssessment}-${index}`]
                                 );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </div>
-)}
-                    {(selectedAssessment === 'IT READINESS ASSESSMENT' || selectedAssessment === 'ICT CHANGE MANAGEMENT') && (
-                      <div className="mt-2">
-                        <button 
-                          onClick={() => {
-                            setExpandedSections(prev => 
-                              prev.includes(`${selectedAssessment}-${index}`) 
-                                ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
-                                : [...prev, `${selectedAssessment}-${index}`]
-                            );
-                          }}
-                          className="text-xs text-blue-600 hover:underline"
-                        >
-                          {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Questions' : 'View Questions'}
-                        </button>
-                        
-                        {expandedSections.includes(`${selectedAssessment}-${index}`) && (
-                          <div className="mt-2 text-xs bg-white p-2 rounded border">
-                            <table className="w-full">
-                              <thead>
-                                <tr>
-                                  <th className="text-left py-1">Question</th>
-                                  <th className="text-right py-1">Score</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {assData.find((section:any) => section.title === selectedAssessment)
-                                  ?.questions[item.split(' (')[0]]
-                                  .map((question:any, qIndex:any) => {
-                                    let score = 0;
-                                    const dataKey = selectedAssessment === 'IT READINESS ASSESSMENT' 
-                                      ? `${item.split(' (')[0].replace(/ /g, ' ')} ${qIndex + 1}`
-                                      : `${item.split(' (')[0]} ${qIndex + 1}`;
-                                    
-                                    let itOfficeData:any = Data["IT Office"].find(
-                                      data => data["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
-                                    );
-                                    
-                                    score = Number(itOfficeData?.[dataKey] || 0);
-                                    const percentage = (score / 5) * 100;
-                                    
-                                    return (
-                                      <tr key={qIndex} className="border-t">
-                                        <td className="py-1">{question}</td>
-                                        <td className="text-right py-1">
-                                          <div className="flex items-center justify-end">
-                                            <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                                              <div 
-                                                className="bg-blue-600 h-2 rounded-full" 
-                                                style={{ width: `${percentage}%` }}
-                                              ></div>
+                              }}
+
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Details' : 'View Office Responses'}
+                            </button>
+
+                            {expandedSections.includes(`${selectedAssessment}-${index}`) && (
+                              <div className="mt-2 text-xs bg-white p-2 rounded border">
+                                <table className="w-full">
+                                  <thead>
+                                    <tr>
+                                      <th className="text-left py-1">Office</th>
+                                      <th className="text-right py-1">Rating (1-5)</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {officesWithData.filter(o => o !== "All Offices").map((office, i) => {
+                                      // Map our friendly office names to data keys
+                                      const officeDataKey = office === "Mayor's Office" ? "Mayors Office" : office;
+
+                                      // Get response for this office
+                                      let officeResponse = 0;
+                                      let Datas: any = Data
+                                      if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
+                                        const data = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
+                                          (item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+                                        );
+
+
+
+                                        officeResponse = Number(data?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
+                                      } else {
+                                        // Find in Other Offices with matching Office Name
+                                        let data: any = Data["Other Offices"].find(
+                                          item =>
+                                            item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() &&
+                                            item["Office Name"] === office
+                                        );
+                                        officeResponse = Number(data?.[`Question ${index + 1} DigitalSkillsAssessment`] || 0);
+                                      }
+
+                                      return (
+                                        <tr key={i} className="border-t">
+                                          <td className="py-1">{office}</td>
+                                          <td className="text-right py-1">
+                                            <div className="flex items-center justify-end">
+                                              <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                                <div
+                                                  className="bg-blue-600 h-2 rounded-full"
+                                                  style={{ width: `${(officeResponse / 5) * 100}%` }}
+                                                ></div>
+                                              </div>
+                                              {officeResponse}
                                             </div>
-                                            {percentage.toFixed(1)}%
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    );
-                                })}
-                              </tbody>
-                            </table>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {selectedAssessment === 'TECHNOLOGY READINESS INDEX' && (
+                          <div className="mt-2">
+                            <button
+                              onClick={() => {
+                                setExpandedSections(prev =>
+                                  prev.includes(`${selectedAssessment}-${index}`)
+                                    ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
+                                    : [...prev, `${selectedAssessment}-${index}`]
+                                );
+                              }}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Questions' : 'View Questions'}
+                            </button>
+
+                            {expandedSections.includes(`${selectedAssessment}-${index}`) && (
+                              <div className="mt-2 text-xs bg-white p-2 rounded border">
+                                <table className="w-full">
+                                  <thead>
+                                    <tr>
+                                      <th className="text-left py-1">Question</th>
+                                      <th className="text-right py-1">Average Score</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {assData[1].questions[item.split(' ')[0]].map((question: any, qIndex: any) => {
+                                      const avgRating = calculateAverageRating(officesWithData, item.split(' ')[0], qIndex + 1, lguInfo);
+                                      const percentage = (avgRating / 5) * 100;
+
+                                      return (
+                                        <>
+                                          <tr key={qIndex} className="border-t hover:bg-gray-50 cursor-pointer"
+                                            onClick={() => {
+                                              setExpandedSections(prev =>
+                                                prev.includes(`${selectedAssessment}-${index}-${qIndex}`)
+                                                  ? prev.filter(id => id !== `${selectedAssessment}-${index}-${qIndex}`)
+                                                  : [...prev, `${selectedAssessment}-${index}-${qIndex}`]
+                                              );
+                                            }}
+                                          >
+                                            <td className="py-1">{question}</td>
+                                            <td className="text-right py-1">
+                                              <div className="flex items-center justify-end">
+                                                <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                                  <div
+                                                    className="bg-blue-600 h-2 rounded-full"
+                                                    style={{ width: `${percentage}%` }}
+                                                  ></div>
+                                                </div>
+                                                {percentage.toFixed(1)}%
+                                              </div>
+                                            </td>
+                                          </tr>
+                                          {expandedSections.includes(`${selectedAssessment}-${index}-${qIndex}`) && (
+                                            <tr>
+                                              <td colSpan={2}>
+                                                <div className="pl-4 py-2 bg-gray-50">
+                                                  <table className="w-full">
+                                                    <thead>
+                                                      <tr>
+                                                        <th className="text-left py-1">Office</th>
+                                                        <th className="text-right py-1">Rating (0-5)</th>
+                                                      </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                      {officesWithData.filter(o => o !== "All Offices").map((office, i) => {
+                                                        const officeDataKey = office === "Mayor's Office" ? "Mayors Office" : office;
+                                                        let officeResponse = 0;
+                                                        let Datas: any = Data
+
+                                                        if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
+                                                          const data = Datas[officeDataKey === "Mayor's Office" ? "Mayors Office" : officeDataKey].find(
+                                                            (item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+                                                          );
+                                                          officeResponse = Number(data?.[`${item.split(' ')[0]} ${qIndex + 1}`] || 0);
+                                                        } else {
+                                                          let data: any = Data["Other Offices"].find(
+                                                            item =>
+                                                              item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() &&
+                                                              item["Office Name"] === office
+                                                          );
+                                                          officeResponse = Number(data?.[`${item.split(' ')[0]} ${qIndex + 1}`] || 0);
+                                                        }
+
+                                                        return (
+                                                          <tr key={i} className="border-t">
+                                                            <td className="py-1">{office}</td>
+                                                            <td className="text-right py-1">
+                                                              <div className="flex items-center justify-end">
+                                                                <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                                                  <div
+                                                                    className="bg-blue-600 h-2 rounded-full"
+                                                                    style={{ width: `${(officeResponse / 5) * 100}%` }}
+                                                                  ></div>
+                                                                </div>
+                                                                {officeResponse}
+                                                              </div>
+                                                            </td>
+                                                          </tr>
+                                                        );
+                                                      })}
+                                                    </tbody>
+                                                  </table>
+                                                </div>
+                                              </td>
+                                            </tr>
+                                          )}
+                                        </>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {(selectedAssessment === 'IT READINESS ASSESSMENT' || selectedAssessment === 'ICT CHANGE MANAGEMENT') && (
+                          <div className="mt-2">
+                            <button
+                              onClick={() => {
+                                setExpandedSections(prev =>
+                                  prev.includes(`${selectedAssessment}-${index}`)
+                                    ? prev.filter(id => id !== `${selectedAssessment}-${index}`)
+                                    : [...prev, `${selectedAssessment}-${index}`]
+                                );
+                              }}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              {expandedSections.includes(`${selectedAssessment}-${index}`) ? 'Hide Questions' : 'View Questions'}
+                            </button>
+
+                            {expandedSections.includes(`${selectedAssessment}-${index}`) && (
+                              <div className="mt-2 text-xs bg-white p-2 rounded border">
+                                <table className="w-full">
+                                  <thead>
+                                    <tr>
+                                      <th className="text-left py-1">Question</th>
+                                      <th className="text-right py-1">Score</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {assData.find((section: any) => section.title === selectedAssessment)
+                                      ?.questions[item.split(' (')[0]]
+                                      .map((question: any, qIndex: any) => {
+                                        let score = 0;
+                                        const dataKey = selectedAssessment === 'IT READINESS ASSESSMENT'
+                                          ? `${item.split(' (')[0].replace(/ /g, ' ')} ${qIndex + 1}`
+                                          : `${item.split(' (')[0]} ${qIndex + 1}`;
+
+                                        let itOfficeData: any = Data["IT Office"].find(
+                                          data => data["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
+                                        );
+
+                                        score = Number(itOfficeData?.[dataKey] || 0);
+                                        const percentage = (score / 5) * 100;
+
+                                        return (
+                                          <tr key={qIndex} className="border-t">
+                                            <td className="py-1">{question}</td>
+                                            <td className="text-right py-1">
+                                              <div className="flex items-center justify-end">
+                                                <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                                  <div
+                                                    className="bg-blue-600 h-2 rounded-full"
+                                                    style={{ width: `${percentage}%` }}
+                                                  ></div>
+                                                </div>
+                                                {percentage.toFixed(1)}%
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <div className="bg-white p-6 col-span-1 rounded-lg shadow">
               <div className="h-[500px]">
@@ -623,9 +900,9 @@ function About() {
                 />
               </div>
             </div>
-            
+
             {/* Interactive Score Display */}
-            
+
           </div>
         </div>
       </div>
@@ -638,7 +915,7 @@ function About() {
         <h1 className="py-4 px-2 text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
           {`${lguInfo["LGU Name"]}, ${lguInfo.Province}`}
 
-       
+
         </h1>
 
         <div className="bg-white h-full p-6 rounded-lg border border-border ">
@@ -660,10 +937,10 @@ function About() {
               </div>
             </div>
             <div className=' w-[30%] md:w-full  h-full flex flex-col  items-center md:items-end '>
-            <ScoreCircle score={Math.round(score)} />
+              <ScoreCircle score={Math.round(score)} />
               <h1 className=' absolute bottom-0 right-0 md:left-0  font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
-            
-            
+
+
             </div>
           </div>
         </div>
@@ -674,11 +951,10 @@ function About() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${
-                  activeTab === tab
-                    ? 'border-b-2 border-red-500 text-red-500 font-medium'
-                    : 'text-gray-500 hover:text-gray-700 border-transparent'
-                }`}
+                className={`mr-4 md:mr-8 py-3 md:py-4 px-1 text-sm md:text-base ${activeTab === tab
+                  ? 'border-b-2 border-red-500 text-red-500 font-medium'
+                  : 'text-gray-500 hover:text-gray-700 border-transparent'
+                  }`}
               >
                 {tab}
               </button>
@@ -688,18 +964,30 @@ function About() {
 
         <div className="py-4 md:py-6 w-full md:w-full">
           {activeTab === 'About' && (
-             <div className="w-full  md:flex-row grid grid-cols-6">
-             <div className=" col-span-4 pr-0 md:pr-6">
-               <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
-             </div>
-             <div className=" col-span-2  flex justify-center items-start">
-               <img 
-                 src={lguInfo["Logo"]} 
-                 alt={`${lguInfo["LGU Name"]} Logo`}
-                 className=" w-full max-w-[200px] mt-[10%] h-auto object-contain"
-               />
-             </div>
-           </div>
+            <div className="w-full md:flex-row grid grid-cols-6">
+              <div className="col-span-4 pr-0 md:pr-6">
+                <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
+
+                {/* Add IT Systems Table below description */}
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold mb-4">IT Systems Available</h3>
+                  <ITSystemsTable lguName={lguInfo["LGU Name"]} data={Data} />
+                </div>
+
+                {/* Add Website & IT Infrastructure Information */}
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold mb-4">Website & IT Infrastructure</h3>
+                  <ITInfrastructureInfo lguName={lguInfo["LGU Name"]} data={Data} />
+                </div>
+              </div>
+              <div className="col-span-2 flex justify-center items-start">
+                <img
+                  src={lguInfo["Logo"]}
+                  alt={`${lguInfo["LGU Name"]} Logo`}
+                  className="w-full max-w-[200px] mt-[10%] h-auto object-contain"
+                />
+              </div>
+            </div>
           )}
           {activeTab === 'Assessment' && renderAssessmentContent()}
           {activeTab === 'Attachments' && (
@@ -763,22 +1051,22 @@ const calculateAverage = (values: number[]) => {
 // Update the Digital Skills calculation inside calculateLGUDetailedScores
 const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
   // Get IT Office data specifically for IT Readiness and Change Management
- 
+
 
   // Get data from all offices including Other Offices
   let officesData: any[] = [];
-  let Datas:any=  Data
+  let Datas: any = Data
   // Add data from main offices (Mayor's, HR, IT)
   offices.forEach(office => {
     if (office === "Other Offices") {
-      const otherOfficesData = Data[office]?.filter(data => 
+      const otherOfficesData = Data[office]?.filter(data =>
         data["LGU Name"]?.toUpperCase() === lguName?.toUpperCase()
       );
       if (otherOfficesData) {
         officesData.push(...otherOfficesData);
       }
     } else {
-      const officeData = Datas[office]?.filter((data:any) => 
+      const officeData = Datas[office]?.filter((data: any) =>
         data["LGU Name"]?.toUpperCase() === lguName?.toUpperCase()
       );
       if (officeData) {
@@ -807,7 +1095,7 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
 
   // Calculate Technology Readiness scores
   const calculateTRIScore = (category: string, questionCount: number) => {
-    const responses = officesData.flatMap(data => 
+    const responses = officesData.flatMap(data =>
       Array.from({ length: questionCount }, (_, i) => Number(data[`${category} ${i + 1}`] || 0))
     );
     const total = responses.reduce((sum, value) => sum + value, 0);
@@ -937,7 +1225,7 @@ const calculateLGUDetailedScores = (lguName: string, offices: string[]) => {
 };
 
 // Update the assessment data structure to include IT Readiness and Change Management
-const assData:any = [
+const assData: any = [
   {
     title: "DIGITAL SKILLS ASSESSMENT",
     data: [
@@ -1052,19 +1340,19 @@ const assData:any = [
 const calculateAverageRating = (offices: string[], category: string, questionNum: number, lguInfo: any) => {
   let total = 0;
   let count = 0;
-  
+
   offices.filter(o => o !== "All Offices").forEach(office => {
     let data: any = null;
-    let Datas:any=  Data
-    
+    let Datas: any = Data
+
     if (["Mayor's Office", "HR Office", "IT Office"].includes(office)) {
       const officeKey = office === "Mayor's Office" ? "Mayors Office" : office;
-      data = Datas[officeKey]?.find((item:any) => 
+      data = Datas[officeKey]?.find((item: any) =>
         item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase()
       );
     } else {
-      data = Data["Other Offices"]?.find(item => 
-        item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
+      data = Data["Other Offices"]?.find(item =>
+        item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() &&
         item["Office Name"]?.trim() === office.trim()
       );
     }
@@ -1077,7 +1365,7 @@ const calculateAverageRating = (offices: string[], category: string, questionNum
       }
     }
   });
-  
+
   return count > 0 ? total / count : 0;
 };
 
