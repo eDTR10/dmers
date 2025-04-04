@@ -236,13 +236,13 @@ const DashboardComponents = () => {
                         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
 
 
-                            <div className="flex flex-col lg:flex-row">
+                            <div className="flex flex-col lg:flex-row ">
                                 {/* Charts Container */}
-                                <div className="flex flex-col md:flex-row gap-4 lg:w-3/5">
+                                <div className="flex flex-col gap-4 w-full">
 
                                     {/* Region Radar Chart */}
-                                    <div className="md:w-full lg:w-1/2 mt-4 md:mt-0">
-                                        <div className="bg-white p-3 rounded shadow-sm h-full">
+                                    <div className="w-full mt-4 md:mt-0 flex justify-center">
+                                        <div className="bg-white p-3 rounded w-full shadow-sm h-full">
                                             <ProvinceRadarChart
                                                 categories={assessmentCategories}
                                                 values={[
@@ -504,9 +504,9 @@ const DashboardComponents = () => {
                                         <span className="text-sm text-gray-500 ml-2">({lguCount} LGUs with data)</span>
                                     </h3>
 
-                                    <div className="flex flex-col md:flex-row">
+                                    <div className="flex flex-col ">
                                         {/* Radar Chart */}
-                                        <div className="md:w-2/5 mt-4 md:mt-0">
+                                        <div className=" mt-4 ">
                                             <div className="bg-white p-3 rounded shadow-sm h-full">
                                                 <ProvinceRadarChart
                                                     categories={assessmentCategories}
@@ -519,7 +519,7 @@ const DashboardComponents = () => {
                                         </div>
 
                                         {/* Metric Cards */}
-                                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 md:mb-0 md:w-3/5">
+                                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4 ">
                                             <div className="bg-white p-3 rounded shadow-sm">
                                                 <div className="text-sm text-gray-500">Overall Score</div>
                                                 <div className="text-xl font-bold text-blue-600">{selectedOverallScore.toFixed(2)}%</div>
