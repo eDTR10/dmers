@@ -286,9 +286,64 @@ const DashboardComponents = () => {
                         </div>
                     )}
 
+                    <div className="grid grid-cols-1 gap-6 mb-8">
+                        <RegionalComparisonChart
+                            title="Province Comparison: Digital Maturity Scores"
+                            categories={assessmentCategories}
+                            misorValues={misorValues}
+                            camiguinValues={camiguinValues}
+                            height={400}
+                            colSpan={4}
+                        />
+                    </div>
+
+                    {/* Detailed Scores Table */}
+                    <div className="bg-white rounded-lg border border-border p-4 mb-8">
+                        <h3 className="text-lg font-medium mb-4">Detailed Assessment Scores</h3>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assessment Category</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Misamis Oriental</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Camiguin</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difference</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {assessmentCategories.map((category, index) => {
+                                        const misorScore = misorValues[index];
+                                        const camiguinScore = camiguinValues[index];
+                                        const diff = misorScore - camiguinScore;
+                                        const diffColor = diff > 0 ? "text-green-600" : diff < 0 ? "text-red-600" : "text-gray-500";
+
+                                        return (
+                                            <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{category}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{misorScore.toFixed(2)}%</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{camiguinScore.toFixed(2)}%</td>
+                                                <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${diffColor}`}>
+                                                    {diff > 0 ? "+" : ""}{diff.toFixed(2)}%
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    <tr className="bg-gray-100">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">Overall Average</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">{misorOverallScore.toFixed(2)}%</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-yellow-500">{camiguinOverallScore.toFixed(2)}%</td>
+                                        <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${misorOverallScore > camiguinOverallScore ? 'text-green-600' : 'text-red-600'}`}>
+                                            {misorOverallScore > camiguinOverallScore ? "+" : ""}{(misorOverallScore - camiguinOverallScore).toFixed(2)}%
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
 
                     {/* Regional Average Card */}
-                    <div className="mb-4 bg-gradient-to-r from-blue-50 to-yellow-50 p-4 rounded-lg border border-gray-200">
+                    {/* <div className="mb-4 bg-gradient-to-r from-blue-50 to-yellow-50 p-4 rounded-lg border border-gray-200">
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-lg font-medium text-gray-700">Overall Regional Digital Maturity:</span>
                             <span className="text-2xl font-bold text-[#0036C5]">{regionData.overallScore.toFixed(2)}%</span>
@@ -299,10 +354,10 @@ const DashboardComponents = () => {
                         <p className="text-sm text-gray-500">
                             Combined average of {regionData.totalLGUs} LGUs across Misamis Oriental and Camiguin
                         </p>
-                    </div>
+                    </div> */}
 
                     {/* Regional Assessment Categories Chart */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <h4 className="text-md font-medium mb-3">Regional Assessment Category Scores</h4>
                             <div className="space-y-3">
@@ -347,23 +402,24 @@ const DashboardComponents = () => {
                             </div>
                         </div>
 
-                        {/* <div className="bg-white p-3 rounded shadow-sm">
+                       
+                    </div> */}
+                    {/* <div className="bg-white p-3 rounded shadow-sm">
                             <canvas id="regionalComparisonChart" height="250"></canvas>
                         </div> */}
-                    </div>
                 </div>
             )}
 
             {/* Overall Score Summary Cards */}
-            // Update the featured province section for better responsiveness
-            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            {/* // Update the featured province section for better responsiveness */}
+            {/* <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="text-lg font-medium mb-2">
                     Featured Province: {selectedProvince === "Misor" ? "Misamis Oriental" : selectedProvince}
                     <span className="text-sm text-gray-500 ml-2">({lguCount} LGUs with data)</span>
                 </h3>
 
                 <div className="flex flex-col lg:flex-row">
-                    {/* Radar Chart - full width on small screens, 2/5 on medium+ */}
+
                     <div className="w-full lg:w-2/5 mt-4 lg:mt-0">
                         <div className="bg-white p-3 rounded shadow-sm h-full">
                             <ProvinceRadarChart
@@ -376,7 +432,7 @@ const DashboardComponents = () => {
                         </div>
                     </div>
 
-                    {/* Metric Cards - scrollable on small screens */}
+                  
                     <div className="w-full lg:w-3/5 mt-4 lg:mt-0 lg:ml-4 overflow-x-auto">
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 min-w-[500px]">
                             <div className="bg-white p-3 rounded shadow-sm">
@@ -402,7 +458,7 @@ const DashboardComponents = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* Toggle button for detailed view */}
             <div className="mb-4 flex justify-between items-center">
@@ -492,65 +548,12 @@ const DashboardComponents = () => {
 
 
                             {/* Line Chart */}
-                            <div className="grid grid-cols-1 gap-6 mb-8">
-                                <RegionalComparisonChart
-                                    title="Province Comparison: Digital Maturity Scores"
-                                    categories={assessmentCategories}
-                                    misorValues={misorValues}
-                                    camiguinValues={camiguinValues}
-                                    height={400}
-                                    colSpan={4}
-                                />
-                            </div>
-
-                            {/* Detailed Scores Table */}
-                            <div className="bg-white rounded-lg border border-border p-4 mb-8">
-                                <h3 className="text-lg font-medium mb-4">Detailed Assessment Scores</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assessment Category</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Misamis Oriental</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Camiguin</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difference</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {assessmentCategories.map((category, index) => {
-                                                const misorScore = misorValues[index];
-                                                const camiguinScore = camiguinValues[index];
-                                                const diff = misorScore - camiguinScore;
-                                                const diffColor = diff > 0 ? "text-green-600" : diff < 0 ? "text-red-600" : "text-gray-500";
-
-                                                return (
-                                                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{category}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{misorScore.toFixed(2)}%</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{camiguinScore.toFixed(2)}%</td>
-                                                        <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${diffColor}`}>
-                                                            {diff > 0 ? "+" : ""}{diff.toFixed(2)}%
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                            <tr className="bg-gray-100">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">Overall Average</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">{misorOverallScore.toFixed(2)}%</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-yellow-500">{camiguinOverallScore.toFixed(2)}%</td>
-                                                <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${misorOverallScore > camiguinOverallScore ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {misorOverallScore > camiguinOverallScore ? "+" : ""}{(misorOverallScore - camiguinOverallScore).toFixed(2)}%
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
 
 
 
 
-                            <div className="mt-6 border-t pt-6">
+
+                            {/* <div className="mt-6 border-t pt-6">
                                 <h3 className="text-lg font-medium mb-4">Key Insights</h3>
                                 <ul className="list-disc pl-5 space-y-2">
                                     <li>
@@ -585,7 +588,7 @@ const DashboardComponents = () => {
                                                 camiguinValues.indexOf(Math.min(...camiguinValues)) === 2 ? ' ICT Change Management' : ' IT Readiness'} for Camiguin.
                                     </li>
                                 </ul>
-                            </div>
+                            </div> */}
                         </>
                     ) : (
                         // Detailed Assessment View
