@@ -385,19 +385,19 @@ const DashboardComponents = () => {
                             </div>
                             <div className="bg-white p-3 rounded shadow-sm">
                                 <div className="text-sm text-gray-500">Digital Skills</div>
-                                <div className="text-xl font-bold text-green-600">{selectedProvinceData.digitalSkills.toFixed(2)}%</div>
+                                <div className="text-xl font-bold text-green-600">{selectedProvinceData?.digitalSkills?.toFixed(2)}%</div>
                             </div>
                             <div className="bg-white p-3 rounded shadow-sm">
                                 <div className="text-sm text-gray-500">Tech Readiness</div>
-                                <div className="text-xl font-bold text-yellow-600">{selectedProvinceData.technologyReadiness.toFixed(2)}%</div>
+                                <div className="text-xl font-bold text-yellow-600">{selectedProvinceData?.technologyReadiness?.toFixed(2)}%</div>
                             </div>
                             <div className="bg-white p-3 rounded shadow-sm">
                                 <div className="text-sm text-gray-500">IT Readiness</div>
-                                <div className="text-xl font-bold text-purple-600">{selectedProvinceData.itReadiness.toFixed(2)}%</div>
+                                <div className="text-xl font-bold text-purple-600">{selectedProvinceData?.itReadiness?.toFixed(2)}%</div>
                             </div>
                             <div className="bg-white p-3 rounded shadow-sm">
                                 <div className="text-sm text-gray-500">Change Management</div>
-                                <div className="text-xl font-bold text-red-600">{selectedProvinceData.changeManagement.toFixed(2)}%</div>
+                                <div className="text-xl font-bold text-red-600">{selectedProvinceData?.changeManagement?.toFixed(2)}%</div>
                             </div>
                         </div>
                     </div>
