@@ -852,7 +852,7 @@ function About() {
                                                     style={{ width: `${percentage}%` }}
                                                   ></div>
                                                 </div>
-                                                {percentage.toFixed(1)}%
+                                                {score}/5
                                               </div>
                                             </td>
                                           </tr>
@@ -1248,10 +1248,50 @@ const assData: any = [
       "Insecurity (9 questions)"
     ],
     questions: {
-      "Optimism": Array.from({ length: 10 }, (_, i) => `Q${i + 1}`),
-      "Innovativeness": Array.from({ length: 7 }, (_, i) => `Q${i + 1}`),
-      "Discomfort": Array.from({ length: 10 }, (_, i) => `Q${i + 1}`),
-      "Insecurity": Array.from({ length: 9 }, (_, i) => `Q${i + 1}`)
+      "Optimism": [
+        "Technology gives people more control over their daily lives.",
+        "Products and services that use the newest technologies are much more convenient to use",
+        "Like the idea of doing business via new technologies",
+        "Prefer to use the most advanced technology available",
+        "Like computer programs that allow me to tailor things to fit my own and the LGU's needs.",
+        "Technology makes me more efficient in my work in the LGU",
+        "I find new technologies to be mentally stimulating",
+        "Technology gives more freedom of mobility",
+        "Learning about technology can be as rewarding as the technology itself",
+        "I feel confident that new technologies, such as e-gov, will greatly help the LGU and its operations"
+      ],
+      "Innovativeness": [
+        "Other people come to me for advice on new technologies",
+        "It seems my friends are learning more about the newest technologies than I am",
+        "In general, I am among the first in my office to acquire and use new technology",
+        "I can usually figure out new high-tech products and services without help from other.",
+        "I can keep up with the latest technological developments in my areas of interest and work in the LGU Office",
+        "I enjoy the challenge of figuring out high-tech gadgets",
+        "I find that I have fewer problems that other people in making technology work for me"
+      ],
+      "Discomfort": [
+        "Technical support lines are not helpful because they do not explain things in terms your understand",
+        "Sometimes, I think that technology systems are not designed for use by ordinary people",
+        "There is no such thing as a manual for a high-tech product or service that is written in the Filipino language",
+        "When I get technical support from a provider of a high-tech product or service, I sometimes feel as if I am being taken advantage of by someone who knows more than I do",
+        "If I buy a high-tech product or service, I prefer to have the basin model over one with a lot of extra features",
+        "It is embarrassing when I have trouble with a high-tech gadget while people are watching",
+        "There should be caution in replacing important people-tasks with technology because new technology can breakdown or get disconnected",
+        "Many new technologies have health or safety risks that are not discovered until after people have used them",
+        "New technology makes it too easy for government and companies to spy on people",
+        "Technology always seems to fail at the worst possible time"
+      ],
+      "Insecurity": [
+        "I do not consider it safe giving out a credit card number or payment details over a computer or new technology",
+        "I do not consider it safe to do any kind of financial business online",
+        "I worry that information I send over the internet will be seen by other people",
+        "I do not feel confident doing business with a place that can only be reached online",
+        "Any business transaction I do electronically should be confirmed later with something in writing",
+        "Whenever something gets automated, I need to check carefully that the machine or computer is not making mistakes",
+        "The human touch is very important when doing business with a company",
+        "When I can a business, I prefer to talk to a person rather an automated call",
+        "If I provide information to a computer or gadget over the internet, I can never be sure it really gets to right place"
+      ]
     }
   },
   {
@@ -1280,27 +1320,112 @@ const assData: any = [
       "Disaster Recovery and Business Continuity (3 questions)"
     ],
     questions: {
-      "BASIC IT READINESS": Array.from({ length: 4 }, (_, i) => `Q${i + 1}`),
-      "IT GOVERNANCE FRAMEWORK & POLICIES": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "IT STRATEGY AND ALIGNMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "IT POLICIES AND PROCEDURES": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "RISK MANAGEMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "IT PERFORMANCE MEASUREMENT AND REPORTING": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "IT INVESTMENT MANAGEMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "VENDOR MANAGEMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "IT SECURITY AND COMPLIANCE": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "ICT Organizational Structure and Skills": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Audit and Assurance": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Network Infrastructure": Array.from({ length: 2 }, (_, i) => `Q${i + 1}`),
-      "Servers and Storage": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Virtualization": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Data Backup and Recovery": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Scalability and Elasticity": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Security Measures": Array.from({ length: 4 }, (_, i) => `Q${i + 1}`),
-      "Monitoring and Performance": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Compliance and Governance": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Integration and Interoperability": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Disaster Recovery and Business Continuity": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`)
+      "BASIC IT READINESS": [
+        "Internet connectivity is stable in speed, availability, and reliability.",
+        "The electricity is stable and reliable in the location of the LGU.",
+        "LGU users have the required hardware specifications and software in their machines to efficiently and effectively use the current system (IBPLS, eTRACS, etc)",
+        "The IT department is manned by competent and qualified personnel to ensure proper on-site assistance when eLGU is live."
+      ],
+      "IT GOVERNANCE FRAMEWORK & POLICIES": [
+        "There is a documented IT governance framework intentionally made for the LGU to describe and standardize its IT management actions and initiatives.",
+        "Alignment of the framework based on existing, recognized conventions.",
+        "Roles and responsibilities are clearly defined within the IT governance framework to guide IT personnel and the whole LGU on all IT-related deliverables which includes IT organizational structure and job specifications and descriptions."
+      ],
+      "IT STRATEGY AND ALIGNMENT": [
+        "The LGU's IT strategy is aligned with its overall organizational goals and objectives.",
+        "There is regular review and updating of IT strategy.",
+        "Mechanisms are in place to ensure that the LGU's IT initiatives and projects are aligned with the strategic objectives of the agency."
+      ],
+      "IT POLICIES AND PROCEDURES": [
+        "There are written comprehensive IT policies and procedures made for and by the LGU in key areas such as information security, data privacy, IT procurement, change management, and IT service management.",
+        "The IT policies and procedures are regularly reviewed and updated to address newly employed technologies (such as the eLGU), emerging risks due to the employment of new systems, and the challenges that come with these.",
+        "Adherence to the IT policies and procedures of the LGU is strictly monitored and enforced."
+      ],
+      "RISK MANAGEMENT": [
+        "The LGU has a structured and documented IT risk management process.",
+        "There are periodic risk assessments conducted to identify and assess IT risks.",
+        "Appropriate controls and mitigation measures are implemented to address identified risks."
+      ],
+      "IT PERFORMANCE MEASUREMENT AND REPORTING": [
+        "LGU mechanisms are in place to measure and monitor IT performance.",
+        "Key performance indicators (KPIs) are established and regularly tracked to assess the effectiveness and efficiency of IT operations.",
+        "A reporting mechanism exists to communicate IT performance to management or governing committee."
+      ],
+      "IT INVESTMENT MANAGEMENT": [
+        "Formal processes for evaluating, prioritizing, and approving IT investments.",
+        "IT investments are aligned with the agency's strategic objectives and supported by robust business cases.",
+        "Is there a mechanism to monitor and evaluate the outcomes and benefits of IT investment."
+      ],
+      "VENDOR MANAGEMENT": [
+        "Policies and procedures for selecting, contracting, and managing IT vendors are in place.",
+        "Structured vendor evaluation and selection process.",
+        "Mechanisms to monitor and assess the performance of IT vendors and ensure compliance with contractual obligations are in place."
+      ],
+      "IT SECURITY AND COMPLIANCE": [
+        "There are documented information security policies and procedures that have been presented, discussed, and adhered to by the whole LGU.",
+        "There is a robust IT security program that includes regular risk assessments, incident reports and response records, and regular security audits with findings presented to the LGU executive with recommendations and actions.",
+        "The LGU follows relevant laws, regulations, and industry standards related to IT security and data privacy as outlined by the National Privacy Commission."
+      ],
+      "ICT Organizational Structure and Skills": [
+        "There is a clear organizational structure for IT management within the LGU.",
+        "IT roles and responsibilities are well-defined and understood.",
+        "The LGU invests in developing and maintaining IT skills and competencies through training and professional development programs."
+      ],
+      "Audit and Assurance": [
+        "There are mechanisms for internal or external audits to assess IT governance compliance.",
+        "There is an established process to address audit findings and implement corrective actions.",
+        "Audit recommendations are tracked and monitored to ensure timely resolution."
+      ],
+      "Network Infrastructure": [
+        "Network routers and switches can handle the anticipated increased traffic load from the current system (IBPLS, eTRACS, etc)",
+        "There are active network security measures which include firewalls and intrusion detection systems to protect the cloud environment."
+      ],
+      "Servers and Storage": [
+        "There is sufficient server capacity to handle the anticipated workload",
+        "There is adequate storage capacity to accommodate data storage requirements",
+        "There are redundancy and fault-tolerant configurations to ensure high availability"
+      ],
+      "Virtualization": [
+        "There is a hypervisor or virtualization platform to create and manage virtual machines.",
+        "There is allocation of appropriate resources (CPU, memory, storage) to virtual machines.",
+        "There are virtual machine management tools for provisioning, monitoring, and scaling resources."
+      ],
+      "Data Backup and Recovery": [
+        "There are regular backup mechanisms to ensure data integrity and availability.",
+        "There is an offsite storage or cloud-based backup solution for disaster recovery purposes.",
+        "There are existing, documented, and tested data recovery procedures."
+      ],
+      "Scalability and Elasticity": [
+        "There is scalable infrastructure that can accommodate growing resource demands",
+        "There are auto-scaling capabilities to dynamically adjust resources based on workload fluctuations",
+        "There are load balancing mechanisms to distribute traffic evenly across servers"
+      ],
+      "Security Measures": [
+        "There are identity and access management controls to regulate user access and permissions.",
+        "There are encryption mechanisms for data in transit and at rest.",
+        "There are intrusion detection and prevention systems to safeguard against unauthorized access.",
+        "There are security monitoring and logging tools to track and analyze system activity."
+      ],
+      "Monitoring and Performance": [
+        "There are monitoring tools to track system performance, resource utilization, and application availability.",
+        "There are alerting mechanisms to notify administrators of any performance or availability issues.",
+        "There is capacity planning to ensure adequate resources are available to meet future demands."
+      ],
+      "Compliance and Governance": [
+        "There is adherence to regulatory requirements and industry standards.",
+        "There are data protection measures in line with applicable privacy laws.",
+        "There is documentation of policies, procedures, and controls for auditing and compliance purposes."
+      ],
+      "Integration and Interoperability": [
+        "There is compatibility with existing systems and applications.",
+        "There is integration with other cloud services or on-premises infrastructure.",
+        "There are APIs or integration frameworks for seamless data exchange between systems."
+      ],
+      "Disaster Recovery and Business Continuity": [
+        "There is a comprehensive disaster recovery plan outlining procedures for system recovery and continuity of operations.",
+        "There is regular testing and validation of the disaster recovery plan",
+        "There are geographically redundant infrastructure or backup sites for critical services."
+      ]
     }
   },
   {
@@ -1319,17 +1444,62 @@ const assData: any = [
       "Costs or Financial (5 questions)"
     ],
     questions: {
-      "CHANGE READINESS": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "CHANGE LEADERSHIP": Array.from({ length: 2 }, (_, i) => `Q${i + 1}`),
-      "CHANGE COMMUNICATION": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "CHANGE IMPACT ASSESSMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "STAKEHOLDER ENGAGEMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "CHANGE PLANNING AND EXECUTION": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "TRAINING AND DEVELOPMENT": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Resistance Management": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Evaluation and Continuous Improvement": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Sustainability and Embedding": Array.from({ length: 3 }, (_, i) => `Q${i + 1}`),
-      "Costs or Financial": Array.from({ length: 5 }, (_, i) => `Q${i + 1}`)
+      "CHANGE READINESS": [
+        "The systems currently used by the LGU (IBPLS, eTRACS, etc) are presented and discussed to users which include features, capabilities, and how this can help in the day-to-day delivery of public services.",
+        "The current system they are using now (IBPLS, eTRACS, etc) is made to be in alignment with the LGU's public service delivery objectives, and user needs are ensured and discussed thoroughly by LGU leaders.",
+        "Resources for training, infrastructure, and support related to the current system (IBPLS, eTRACS, etc) are planned and allocated before its rollout."
+      ],
+      "CHANGE LEADERSHIP": [
+        "Leadership support and sponsorship of the current system (IBPLS, eTRACS, etc) were secured before it was rolled out.",
+        "Change agents, system ambassadors, superusers, or local trainers who can facilitate and support users for the adoption of the currently used systems (IBPLS, eTRACS, etc) were identified beforehand to help with its roll-out."
+      ],
+      "CHANGE COMMUNICATION": [
+        "The LGU had a functioning or tested communication strategy for informing users regarding the implementation of the currently used system (IBPLS, eTRACS, etc)",
+        "Communication messages regarding the current system they are using (IBPLS, eTRACS) for specific user groups like department heads, LGU staff, and department front liners/clerks, were already tailored and readied for delivery.",
+        "There are regular updates and opportunities for users to ask questions and provide feedback on the currently used system which includes the set up of communication channels to push these questions toward the developers and managers of the system."
+      ],
+      "CHANGE IMPACT ASSESSMENT": [
+        "The potential impact of the currently used system (IBPLS, eTRACS) with regards to changes on LGU processes, workflows, and interface with the public was identified with developed courses of action to address possible negative reactions and resistance.",
+        "There were developed plans and strategies to mitigate risks and challenges associated with the current system (IBPLS, eTRACS, etc)",
+        "There were set reports that cover assessments and recommendations on the technical requirements, infrastructure changes, and/or upgrades on the current system."
+      ],
+      "STAKEHOLDER ENGAGEMENT": [
+        "Stakeholders, including end-users, IT teams, and relevant departments are engaged throughout the system change process.",
+        "Feedback and input from stakeholders are solicited to ensure their needs and concerns are addressed.",
+        "Stakeholders in user acceptance testing and pilot programs are involved in validating the system solution."
+      ],
+      "CHANGE PLANNING AND EXECUTION": [
+        "A detailed plan for implementing the system change (IBPLS, eTRACS, etc), including activities, milestones, and responsibilities was developed.",
+        "Established change management methodologies or frameworks to guide the system change process were followed.",
+        "There is continuous monitoring of progress which is adjusted as needed, with dependencies and risks managed at all times."
+      ],
+      "TRAINING AND DEVELOPMENT": [
+        "Training needs were assessed to ensure users are equipped with the necessary skills to use the current system effectively.",
+        "Training programs that cover system functionality, features, and workflows were developed and delivered.",
+        "Ongoing support and resources to help users adapt to the system change were provided."
+      ],
+      "Resistance Management": [
+        "Potential resistance to the system change, such as user reluctance or concerns was anticipated and addressed.",
+        "The benefits of the system solution and addressing user fears or misconceptions were communicated.",
+        "Mechanisms for users to express their concerns and provide feedback throughout the process were provided."
+      ],
+      "Evaluation and Continuous Improvement": [
+        "Metrics and indicators to measure the success of the system change, such as user adoption rates or productivity improvements were established.",
+        "Feedback from users and stakeholders to identify areas for improvement and iterate on the system solution was collected.",
+        "Evaluation of the effectiveness of change management activities and adjusting strategies as needed are done continuously."
+      ],
+      "Sustainability and Embedding": [
+        "The system change is ensured to become ingrained in the organization's processes and culture.",
+        "Plans for ongoing maintenance, upgrades, and enhancements of the current system solution are developed.",
+        "The adoption of the system solution to maximize its long-term benefits is monitored and reinforced."
+      ],
+      "Costs or Financial": [
+        "Budget allocation for pre- implementation costs",
+        "Budget allocation for implementation costs",
+        "Budget for ongoing/continuing costs",
+        "Funds are readily accessible and can be released at any time needed",
+        "Identified funding sources to sustain computerization in the future"
+      ]
     }
   }
 ];
