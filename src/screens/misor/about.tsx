@@ -962,9 +962,17 @@ function About() {
 
         <div className="py-4 md:py-6 w-full md:w-full">
           {activeTab === 'About' && (
-            <div className="w-full md:flex-row grid grid-cols-6">
-              <div className="col-span-4 pr-0 md:pr-6">
-                <p className="mb-4 text-sm md:text-base">{lguInfo.descriptioon}</p>
+            <div className="w-full md:flex-row grid direction-reverse grid-cols-6">
+              <p className="mb-4 text-sm md:text-base col-span-6">{lguInfo.descriptioon}</p>
+              <div className=" hidden  sm:col-span-6 sm:flex justify-center items-start">
+                <img
+                  src={lguInfo["Logo"]}
+                  alt={`${lguInfo["LGU Name"]} Logo`}
+                  className="w-full max-w-[200px] mt-[10%] h-auto object-contain"
+                />
+              </div>
+              <div className="col-span-4 sm:col-span-6 pr-0 md:pr-6 sm:pr-0 ">
+                
 
                 {/* Add IT Systems Table below description */}
                 <div className="mt-8">
@@ -977,20 +985,163 @@ function About() {
                   <h3 className="text-xl font-semibold mb-4">Website & IT Infrastructure</h3>
                   <ITInfrastructureInfo lguName={lguInfo["LGU Name"]} data={Data} />
                 </div>
+
+
+                <div className="w-full overflow-x-auto mt-8">
+    <h3 className="text-xl font-semibold mb-4 ">Human Resource Capacity</h3>
+    <table className="min-w-full bg-white border border-gray-200">
+      <thead>
+        <tr className="bg-gray-100">
+          <th className="px-4 py-2 text-left border-b">Office</th>
+          <th className="px-4 py-2 text-center border-b">Permanent</th>
+          <th className="px-4 py-2 text-center border-b">Casual</th>
+          <th className="px-4 py-2 text-center border-b">Job Order</th>
+          <th className="px-4 py-2 text-center border-b">Co-Terminus</th>
+          <th className="px-4 py-2 text-center border-b font-semibold ">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {Data["HR (Employee List)"]
+          .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+          .map((office: any, index: number) => (
+            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+              <td className="px-4 py-2 border-b">{office["Office"]}</td>
+              <td className="px-4 py-2 text-center border-b">{office["Permanent Employees"] || 0}</td>
+              <td className="px-4 py-2 text-center border-b">{office["Casual Employees"] || 0}</td>
+              <td className="px-4 py-2 text-center border-b">{office["Job Order Employees"] || 0}</td>
+              <td className="px-4 py-2 text-center border-b">{office["Co-Terminus Employees"] || 0}</td>
+              <td className="px-4 py-2 text-center border-b font-medium ">
+                {(office["Permanent Employees"] || 0) +
+                  (office["Casual Employees"] || 0) +
+                  (office["Job Order Employees"] || 0) +
+                  (office["Co-Terminus Employees"] || 0) +
+                  (office["Temporary Employees"] || 0)}
+              </td>
+            </tr>
+          ))}
+        <tr className="bg-blue-50 font-medium">
+          <td className="px-4 py-2 border-b">Total</td>
+          <td className="px-4 py-2 text-center border-b">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => sum + (office["Permanent Employees"] || 0), 0)}
+          </td>
+          <td className="px-4 py-2 text-center border-b">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => sum + (office["Casual Employees"] || 0), 0)}
+          </td>
+          <td className="px-4 py-2 text-center border-b">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => sum + (office["Job Order Employees"] || 0), 0)}
+          </td>
+          <td className="px-4 py-2 text-center border-b">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => sum + (office["Co-Terminus Employees"] || 0), 0)}
+          </td>
+        
+          <td className="px-4 py-2 text-center border-b bg-blue-200/50 font-semibold">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => 
+                sum + 
+                (office["Permanent Employees"] || 0) +
+                (office["Casual Employees"] || 0) +
+                (office["Job Order Employees"] || 0) +
+                (office["Co-Terminus Employees"] || 0) +
+                (office["Temporary Employees"] || 0), 0)}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
               </div>
-              <div className="col-span-2 flex justify-center items-start">
+
+              <div className="  sm:hidden  col-span-2 flex justify-center items-start">
                 <img
                   src={lguInfo["Logo"]}
                   alt={`${lguInfo["LGU Name"]} Logo`}
                   className="w-full max-w-[200px] mt-[10%] h-auto object-contain"
                 />
               </div>
+              
             </div>
           )}
           {activeTab === 'Assessment' && renderAssessmentContent()}
           {activeTab === 'Attachments' && (
-            <h3 className="text-xl font-semibold mb-4">Attachments</h3>
-          )}
+  <div className="w-full overflow-x-auto">
+    <h3 className="text-xl font-semibold mb-4">Employee Distribution by Office</h3>
+    <table className="min-w-full bg-white border border-gray-200">
+      <thead>
+        <tr className="bg-gray-100">
+          <th className="px-4 py-2 text-left border-b">Office</th>
+          <th className="px-4 py-2 text-center border-b">Permanent</th>
+          <th className="px-4 py-2 text-center border-b">Casual</th>
+          <th className="px-4 py-2 text-center border-b">Job Order</th>
+          <th className="px-4 py-2 text-center border-b">Co-Terminus</th>
+          <th className="px-4 py-2 text-center border-b font-semibold">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {Data["HR (Employee List)"]
+          .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+          .map((office: any, index: number) => (
+            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+              <td className="px-4 py-2 border-b">{office["Office"]}</td>
+              <td className="px-4 py-2 text-center border-b">{office["Permanent Employees"] || 0}</td>
+              <td className="px-4 py-2 text-center border-b">{office["Casual Employees"] || 0}</td>
+              <td className="px-4 py-2 text-center border-b">{office["Job Order Employees"] || 0}</td>
+              <td className="px-4 py-2 text-center border-b">{office["Co-Terminus Employees"] || 0}</td>
+              <td className="px-4 py-2 text-center border-b font-medium">
+                {(office["Permanent Employees"] || 0) +
+                  (office["Casual Employees"] || 0) +
+                  (office["Job Order Employees"] || 0) +
+                  (office["Co-Terminus Employees"] || 0) +
+                  (office["Temporary Employees"] || 0)}
+              </td>
+            </tr>
+          ))}
+        <tr className="bg-blue-50 font-medium">
+          <td className="px-4 py-2 border-b">Total</td>
+          <td className="px-4 py-2 text-center border-b">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => sum + (office["Permanent Employees"] || 0), 0)}
+          </td>
+          <td className="px-4 py-2 text-center border-b">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => sum + (office["Casual Employees"] || 0), 0)}
+          </td>
+          <td className="px-4 py-2 text-center border-b">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => sum + (office["Job Order Employees"] || 0), 0)}
+          </td>
+          <td className="px-4 py-2 text-center border-b">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => sum + (office["Co-Terminus Employees"] || 0), 0)}
+          </td>
+        
+          <td className="px-4 py-2 text-center border-b bg-blue-100 font-semibold">
+            {Data["HR (Employee List)"]
+              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+              .reduce((sum: number, office: any) => 
+                sum + 
+                (office["Permanent Employees"] || 0) +
+                (office["Casual Employees"] || 0) +
+                (office["Job Order Employees"] || 0) +
+                (office["Co-Terminus Employees"] || 0) +
+                (office["Temporary Employees"] || 0), 0)}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+)}
         </div>
       </div>
     </div>
@@ -1005,24 +1156,40 @@ const InfoCard = ({ label, value, span }: any) => (
 );
 
 const ScoreCircle = ({ score }: { score: number }) => (
-  <div className=" flex flex-col items-center ">
+  <div className="flex flex-col items-center">
     <div className="text-xl font-bold text-[#0036C5] mb-2">Score</div>
-    <div className="relative w-40 h-40">
-      <svg className="w-full h-full transform -rotate-90">
-        <circle cx="80" cy="80" r="70" fill="none" stroke="#ecc216" strokeWidth="15" />
+    <div className="relative w-40 h-40 sm:w-44 sm:h-44">
+      <svg 
+        className="w-full h-full transform -rotate-90" 
+        viewBox="0 0 100 100" 
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <circle 
+          cx="50" 
+          cy="50" 
+          r="45" 
+          fill="none" 
+          stroke="#ecc216" 
+          strokeWidth="8" 
+        
+        />
         <circle
-          cx="80"
-          cy="80"
-          r="70"
+          cx="50"
+          cy="50"
+          r="45"
           fill="none"
           stroke="#0036C5"
-          strokeWidth="15"
+          strokeWidth="8"
           strokeLinecap="round"
-          strokeDasharray={`${(score / 100) * 439.6} 439.6`}
+          strokeDasharray={`${(score / 100) * 251.2} 251.2`}
+         
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-5xl font-bold" style={{ color: score >= 50 ? '#0036c6' : '#ecc216' }}>
+        <span 
+          className="text-5xl sm:text-5xl font-bold"
+          style={{ color: score >= 50 ? '#0036c6' : '#ecc216' }}
+        >
           {score}%
         </span>
       </div>
