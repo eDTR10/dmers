@@ -171,7 +171,13 @@ function MisamisOriental() {
 
   const navigate = useNavigate();
   const [lguData, setLguData] = useState([]);
-  const [categoryData, setCategoryData] = useState({});
+  const [categoryData, setCategoryData] = useState<{
+      labels: string[];
+      datasets: { label: string; data: number[]; borderColor: string; backgroundColor: string; tension: number }[];
+    }>({
+      labels: [],
+      datasets: []
+    });
   const [searchTerm, setSearchTerm] = useState('');
 
 
