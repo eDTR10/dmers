@@ -70,7 +70,7 @@ export const ProvinceRadarChart = ({
 
     // Calculate responsive font sizes and margins
     const legendFontSize = containerWidth < 400 ? 9 : containerWidth < 600 ? 11 : 13;
-    const arcLabelFontSize = containerWidth < 400 ? 11 : containerWidth < 600 ? 13 : 15;
+    // const arcLabelFontSize = containerWidth < 400 ? 11 : containerWidth < 600 ? 13 : 15;
     const centerTextSize = containerWidth < 400 ? 14 : containerWidth < 600 ? 16 : 18;
     const centerSubTextSize = containerWidth < 400 ? 12 : containerWidth < 600 ? 14 : 16;
     const titleFontSize = containerWidth < 400 ? 14 : containerWidth < 600 ? 16 : 18;
