@@ -24,6 +24,22 @@ ChartJS.register(
   Legend
 );
 
+interface ConnectivityItem {
+  office: string;
+  ispProvider?: string;
+  modemType?: string;
+  modemDevices?: number;
+  hasLAN?: string;
+  lanDevices?: number;
+  speed?: number | string;
+}
+
+interface ConnectivityTableProps {
+  lguName: string;
+  data: any;
+}
+
+
 function About() {
   const { lguName } = useParams();
   const location = useLocation();
@@ -361,11 +377,6 @@ function About() {
     };
   }
 
-  /**
-   * Component to render the LGU website and IT infrastructure information
-   * @param lguName The name of the LGU
-   * @param data The survey data
-   */
   const ITInfrastructureInfo = ({ lguName, data }: { lguName: string, data: any }) => {
     const websiteInfo = getLGUWebsiteInfo(lguName, data);
 
@@ -915,7 +926,7 @@ function About() {
         <h1 className="py-4 px-2 text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
           {`${lguInfo["LGU Name"]}, ${lguInfo.Province}`}
 
-       
+
         </h1>
 
         <div className="bg-white h-full p-6 rounded-lg border border-border ">
@@ -979,6 +990,24 @@ function About() {
                   <h3 className="text-xl font-semibold mb-4">Website & IT Infrastructure</h3>
                   <ITInfrastructureInfo lguName={lguInfo["LGU Name"]} data={Data} />
                 </div>
+
+                {/* Add Connectivity Information Table */}
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold mb-4">Office Connectivity Information</h3>
+                  <ConnectivityTable lguName={lguInfo["LGU Name"]} data={Data} />
+                </div>
+
+                {/* Add Centralized Connected Devices Table */}
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold mb-4">Centralized Device Distribution</h3>
+                  <CentralizedDevicesTable lguName={lguInfo["LGU Name"]} data={Data} />
+                </div>
+
+                {/* Add ISP Information & ICT Environment Table first */}
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold mb-4">ISP Coverage & ICT Environment</h3>
+                  <ISPInformationTable lguName={lguInfo["LGU Name"]} data={Data} />
+                </div>
               </div>
               <div className="col-span-2 flex justify-center items-start">
                 <img
@@ -998,6 +1027,560 @@ function About() {
     </div>
   );
 }
+
+function getLGUConnectivityInfo(lguName: string, data: any) {
+  // Find the IT Office data for the specified LGU
+  const itOfficeData = data["IT Office"].find(
+    (item: any) => item["LGU Name"]?.toUpperCase() === lguName.toUpperCase()
+  );
+
+  if (!itOfficeData) {
+    return { error: "No connectivity data found for this LGU" };
+  }
+
+  // List of all office prefixes and their full names
+  const offices = [
+    { prefix: 'a', name: 'Business Permits and Licensing Office (BPLO)' },
+    { prefix: 'b', name: 'Information and Communications Technology (ICT) Office' },
+    { prefix: 'c', name: 'Engineering Office' },
+    { prefix: 'd', name: 'Office of the Building Official (OBO)' },
+    { prefix: 'e', name: 'Planning and Development Office' },
+    { prefix: 'f', name: 'Sanitary / Health Office' },
+    { prefix: 'g', name: 'Treasury Office' },
+    { prefix: 'h', name: 'Zoning Office' },
+    { prefix: 'i', name: 'General Services Office' },
+    { prefix: 'j', name: 'Bureau of Fire Protection (BFP)' },
+    { prefix: 'k', name: 'Local Civil Registry Office' },
+    { prefix: 'l', name: 'Assessor\'s Office' },
+    { prefix: 'm', name: 'Administrator\'s Office' },
+    { prefix: 'n', name: 'Human Resource and Management Office' },
+    { prefix: 'o', name: 'Budget Office' },
+    { prefix: 'p', name: 'Accountant\'s Office' },
+    { prefix: 'q', name: 'Sangguniang Panlungsod' },
+    { prefix: 'r', name: 'Tourism Office' },
+    { prefix: 's', name: 'Population Office' },
+    { prefix: 't', name: 'Library Office' },
+    { prefix: 'u', name: 'Social Welfare and Development Office' },
+    { prefix: 'v', name: 'Veterinarian\'s Office' },
+    { prefix: 'w', name: 'Agriculturist\'s Office' },
+    { prefix: 'x', name: 'Mayor\'s Office' }
+  ];
+
+  // Extract connectivity data for each office
+  const connectivityData = offices.map(office => {
+    const baseKey = `B. CONNECTIVITY - ${office.prefix}. ${office.name}`;
+
+    return {
+      office: office.name,
+      ispProvider: itOfficeData[`${baseKey} - ISP Provider`] || "-",
+      modemType: itOfficeData[`${baseKey} - If Modem (Pocket Wifi, fibr, mobile broadband router, etc), Provide what modem.`] || "-",
+      modemDevices: itOfficeData[`${baseKey} - No. of device connecting to the modem`] || 0,
+      hasLAN: itOfficeData[`${baseKey} - If Local Network Area (LAN), Input Yes`] || "No",
+      lanDevices: itOfficeData[`${baseKey} - No. of device connecting to the LAN`] || 0,
+      speed: itOfficeData[`${baseKey} - Subscription speed in Mbps (Prepaid, Plan)`] || "-"
+    };
+  });
+
+  return {
+    lguName: lguName,
+    connectivityData: connectivityData.filter(item =>
+      item.ispProvider !== "-" || item.modemType !== "-" || item.speed !== "-" ||
+      item.modemDevices > 0 || item.lanDevices > 0 || item.hasLAN === "Yes"
+    )
+  };
+}
+
+const ConnectivityTable = ({ lguName, data }: ConnectivityTableProps) => {
+  const connectivityInfo = getLGUConnectivityInfo(lguName, data);
+
+  if (connectivityInfo.error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded">
+        <p className="text-red-700">{connectivityInfo.error}</p>
+      </div>
+    );
+  }
+
+  if (!connectivityInfo.connectivityData || connectivityInfo.connectivityData.length === 0) {
+    return (
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+        <p className="text-yellow-700">No connectivity data available for {connectivityInfo.lguName}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full bg-white border border-gray-200">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="px-4 py-2 text-left border-b">Office</th>
+            <th className="px-4 py-2 text-left border-b">ISP Provider</th>
+            <th className="px-4 py-2 text-left border-b">Modem Type</th>
+            <th className="px-4 py-2 text-center border-b">Modem Devices</th>
+            <th className="px-4 py-2 text-center border-b">LAN</th>
+            <th className="px-4 py-2 text-center border-b">LAN Devices</th>
+            <th className="px-4 py-2 text-center border-b">Speed (Mbps)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {connectivityInfo.connectivityData.map((item: ConnectivityItem, index: number) => (
+            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+              <td className="px-4 py-2 border-b">{item.office}</td>
+              <td className="px-4 py-2 border-b">{item.ispProvider || "-"}</td>
+              <td className="px-4 py-2 border-b">{item.modemType || "-"}</td>
+              <td className="px-4 py-2 border-b text-center">{item.modemDevices || "-"}</td>
+              <td className="px-4 py-2 border-b text-center">
+                {item.hasLAN === "Yes" ? (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    Yes
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                    No
+                  </span>
+                )}
+              </td>
+              <td className="px-4 py-2 border-b text-center">{item.lanDevices || "-"}</td>
+              <td className="px-4 py-2 border-b text-center">{item.speed || "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// Function to get centralized device data for each office in the LGU
+function getLGUCentralizedDevices(lguName: string, data: any) {
+  // Find the IT Office data for the specified LGU
+  const itOfficeData = data["IT Office"].find(
+    (item: any) => item["LGU Name"]?.toUpperCase() === lguName.toUpperCase()
+  );
+
+  if (!itOfficeData) {
+    return { error: "No IT Office data found for this LGU" };
+  }
+
+  // List of all office prefixes and their full names
+  const offices = [
+    { prefix: 'a', name: 'Business Permits and Licensing Office (BPLO)' },
+    { prefix: 'b', name: 'Information and Communications Technology (ICT) Office' },
+    { prefix: 'c', name: 'Engineering Office' },
+    { prefix: 'd', name: 'Office of the Building Official (OBO)' },
+    { prefix: 'e', name: 'Planning and Development Office' },
+    { prefix: 'f', name: 'Sanitary / Health Office' },
+    { prefix: 'g', name: 'Treasury Office' },
+    { prefix: 'h', name: 'Zoning Office' },
+    { prefix: 'i', name: 'General Services Office' },
+    { prefix: 'j', name: 'Bureau of Fire Protection (BFP)' },
+    { prefix: 'k', name: 'Local Civil Registry Office' },
+    { prefix: 'l', name: 'Assessor\'s Office' },
+    { prefix: 'm', name: 'Administrator\'s Office' },
+    { prefix: 'n', name: 'Human Resource and Management Office' },
+    { prefix: 'o', name: 'Budget Office' },
+    { prefix: 'p', name: 'Accountant\'s Office' },
+    { prefix: 'q', name: 'Sangguniang Panlungsod' },
+    { prefix: 'r', name: 'Tourism Office' },
+    { prefix: 's', name: 'Population Office' },
+    { prefix: 't', name: 'Library Office' },
+    { prefix: 'u', name: 'Social Welfare and Development Office' },
+    { prefix: 'v', name: 'Veterinarian\'s Office' },
+    { prefix: 'w', name: 'Agriculturist\'s Office' },
+    { prefix: 'x', name: 'Mayor\'s Office' }
+  ];
+
+  // Extract centralized device data for each office
+  const deviceData = offices.map(office => {
+    const baseKey = `If centralized, how many devices are connected per office? - ${office.prefix}. ${office.name}`;
+    const deviceCount = itOfficeData[`${baseKey} - Number of Devices`] || 0;
+
+    return {
+      office: office.name,
+      deviceCount: deviceCount
+    };
+  });
+
+  return {
+    lguName: lguName,
+    deviceData: deviceData.filter(item => item.deviceCount > 0)
+  };
+}
+
+interface CentralizedDevicesTableProps {
+  lguName: string;
+  data: any;
+}
+
+const CentralizedDevicesTable = ({ lguName, data }: CentralizedDevicesTableProps) => {
+  const deviceInfo = getLGUCentralizedDevices(lguName, data);
+
+  if (deviceInfo.error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded">
+        <p className="text-red-700">{deviceInfo.error}</p>
+      </div>
+    );
+  }
+
+  if (!deviceInfo.deviceData || deviceInfo.deviceData.length === 0) {
+    return (
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+        <p className="text-yellow-700">No centralized device data available for {deviceInfo.lguName}</p>
+      </div>
+    );
+  }
+
+  // Calculate total devices
+  const totalDevices = deviceInfo.deviceData.reduce((sum, item) => sum + Number(item.deviceCount), 0);
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full bg-white border border-gray-200">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="px-4 py-2 text-left border-b">Office</th>
+            <th className="px-4 py-2 text-center border-b">Number of Connected Devices</th>
+            {/* <th className="px-4 py-2 text-center border-b">Percentage</th> */}
+          </tr>
+        </thead>
+        <tbody>
+          {deviceInfo.deviceData.map((item: any, index: number) => (
+            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+              <td className="px-4 py-2 border-b">{item.office}</td>
+              <td className="px-4 py-2 border-b text-center">
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                  {item.deviceCount}
+                </span>
+              </td>
+              {/* <td className="px-4 py-2 border-b">
+                <div className="flex items-center"> */}
+              {/* <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                    <div
+                      className="bg-blue-600 h-2.5 rounded-full"
+                      style={{ width: `${(item.deviceCount / totalDevices) * 100}%` }}
+                    ></div>
+                  </div> */}
+              {/* <span className="text-xs font-medium">
+                    {((item.deviceCount / totalDevices) * 100).toFixed(1)}%
+                  </span> */}
+              {/* </div>
+              </td> */}
+            </tr>
+          ))}
+          <tr className="bg-gray-100 font-semibold">
+            <td className="px-4 py-2 border-b">Total</td>
+            <td className="px-4 py-2 border-b text-center">{totalDevices}</td>
+            {/* <td className="px-4 py-2 border-b text-center">100%</td> */}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// Function to parse and extract ISP provider information from IT Office data
+function getLGUISPInfo(lguName: string, data: any) {
+  // Find the IT Office data for the specified LGU
+  const itOfficeData = data["IT Office"].find(
+    (item: any) => item["LGU Name"]?.toUpperCase() === lguName?.toUpperCase()
+  );
+
+  if (!itOfficeData) {
+    return { error: "No IT Office data found for this LGU" };
+  }
+
+  // Process main ISP data - handle both JSON and non-JSON formats
+  let mainISP = parseJSONSafely(itOfficeData["Main ISP Provider"]);
+  if (typeof mainISP === 'string') {
+    // Create a structured object if it's just a string value
+    mainISP = {
+      "ISP Provider": mainISP,
+      "Distance in Meter": "-"
+    };
+  } else if (typeof mainISP === 'number') {
+    // Create a structured object if it's just a number value
+    mainISP = {
+      "ISP Provider": "Unknown",
+      "Distance in Meter": mainISP.toString()
+    };
+  }
+
+  // Process nearest ISP tower data - handle both JSON and non-JSON formats
+  let nearestISP = parseJSONSafely(itOfficeData["Distance from other nearest ISP towers"]);
+  if (typeof nearestISP === 'string') {
+    // Create a structured object if it's just a string value
+    nearestISP = {
+      "ISP Provider": nearestISP,
+      "Distance in Meter": "-"
+    };
+  } else if (typeof nearestISP === 'number') {
+    // If it's a number, assume it's the distance in meters
+    nearestISP = {
+      "ISP Provider": "Unknown",
+      "Distance in Meter": `${nearestISP} M`
+    };
+  }
+
+  // Process other ISP data - handle both JSON and non-JSON formats
+  let otherISP = parseJSONSafely(itOfficeData["Please indicate others (if applicable)"]);
+  if (typeof otherISP === 'string') {
+    // Create a structured object if it's just a string value
+    otherISP = {
+      "ISP Provider": otherISP,
+      "Distance in Meter": "-"
+    };
+  } else if (typeof otherISP === 'number') {
+    // If it's a number, assume it's the distance in meters
+    otherISP = {
+      "ISP Provider": "Unknown",
+      "Distance in Meter": `${otherISP} M`
+    };
+  }
+
+  // Parse ICT environment data - assume this is always JSON
+  const ictEnvironment = parseJSONSafely(itOfficeData["C. INFORMATION AND COMMUNICATIONS TECHNOLOGY ENVIRONMENT"] || "[]");
+
+  // Create the final ispInfo object
+  const ispInfo = {
+    mainISP,
+    nearestISP,
+    otherISP,
+    ictEnvironment: Array.isArray(ictEnvironment) ? ictEnvironment : [],
+    powerInterruption: itOfficeData["Do you experience power interruption?"] || "No data",
+    powerInterruptionFrequency: itOfficeData["If Yes, how often? (Number of hours per working days)"] || "N/A",
+    hasGenerator: itOfficeData["Is there a backup generator?"] || "No data",
+    generatorPowersComputers: itOfficeData["If Yes, can the generator power the computers?"] || "N/A"
+  };
+
+  return {
+    lguName: lguName,
+    ispInfo: ispInfo
+  };
+}
+
+// Helper function to safely parse JSON strings
+function parseJSONSafely(jsonString: string | number | undefined) {
+  if (jsonString === undefined || jsonString === null) return null;
+
+  // If it's already a number, just return it
+  if (typeof jsonString === 'number') return jsonString;
+
+  // If it's a string, try to parse it as JSON
+  if (typeof jsonString === 'string') {
+    try {
+      // Only parse if it looks like a JSON object or array
+      if ((jsonString.startsWith('{') && jsonString.endsWith('}')) ||
+        (jsonString.startsWith('[') && jsonString.endsWith(']'))) {
+        return JSON.parse(jsonString);
+      } else {
+        // Return as-is if it's not JSON formatted
+        return jsonString;
+      }
+    } catch (e) {
+      return jsonString;
+    }
+  }
+
+  return null;
+}
+
+const ISPInformationTable = ({ lguName, data }: { lguName: string, data: any }) => {
+  const ispInfo = getLGUISPInfo(lguName, data);
+
+  if (ispInfo.error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded">
+        <p className="text-red-700">{ispInfo.error}</p>
+      </div>
+    );
+  }
+
+  // Check if we have valid data to display
+  if (!ispInfo?.ispInfo?.mainISP && !ispInfo?.ispInfo?.nearestISP && !ispInfo?.ispInfo?.otherISP) {
+    return (
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+        <p className="text-yellow-700">No ISP information available for {ispInfo.lguName}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* ISP Providers Section */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-4 py-2 text-left border-b" colSpan={3}>ISP Providers and Coverage</th>
+            </tr>
+            <tr className="bg-gray-50">
+              <th className="px-4 py-2 text-left border-b">Type</th>
+              <th className="px-4 py-2 text-left border-b">Provider</th>
+              <th className="px-4 py-2 text-left border-b">Distance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ispInfo?.ispInfo?.mainISP && (
+              <tr>
+                <td className="px-4 py-2 border-b font-medium">Main ISP</td>
+                <td className="px-4 py-2 border-b">
+                  {typeof ispInfo.ispInfo.mainISP === 'object'
+                    ? (ispInfo.ispInfo.mainISP?.["ISP Provider"] || ispInfo.ispInfo.mainISP?.ISP_Provider || "-")
+                    : ispInfo.ispInfo.mainISP || "-"}
+                </td>
+                <td className="px-4 py-2 border-b">
+                  {typeof ispInfo.ispInfo.mainISP === 'object'
+                    ? (ispInfo.ispInfo.mainISP?.["Distance in Meter"] || ispInfo.ispInfo.mainISP?.Distance_in_Meter || "-")
+                    : "-"}
+                </td>
+              </tr>
+            )}
+            {ispInfo?.ispInfo?.nearestISP && (
+              <tr className="bg-gray-50">
+                <td className="px-4 py-2 border-b font-medium">Nearest Alternative ISP</td>
+                <td className="px-4 py-2 border-b">
+                  {typeof ispInfo.ispInfo.nearestISP === 'object'
+                    ? (ispInfo.ispInfo.nearestISP?.["ISP Provider"] || ispInfo.ispInfo.nearestISP?.ISP_Provider || "-")
+                    : (typeof ispInfo.ispInfo.nearestISP === 'number' ? "Unknown" : ispInfo.ispInfo.nearestISP || "-")}
+                </td>
+                <td className="px-4 py-2 border-b">
+                  {typeof ispInfo.ispInfo.nearestISP === 'object'
+                    ? (ispInfo.ispInfo.nearestISP?.["Distance in Meter"] || ispInfo.ispInfo.nearestISP?.Distance_in_Meter || "-")
+                    : (typeof ispInfo.ispInfo.nearestISP === 'number' ? `${ispInfo.ispInfo.nearestISP} M` : "-")}
+                </td>
+              </tr>
+            )}
+            {ispInfo?.ispInfo?.otherISP && (
+              <tr>
+                <td className="px-4 py-2 border-b font-medium">Other ISP</td>
+                <td className="px-4 py-2 border-b">
+                  {typeof ispInfo.ispInfo.otherISP === 'object'
+                    ? (ispInfo.ispInfo.otherISP?.["ISP Provider"] || ispInfo.ispInfo.otherISP?.ISP_Provider || "-")
+                    : ispInfo.ispInfo.otherISP || "-"}
+                </td>
+                <td className="px-4 py-2 border-b">
+                  {typeof ispInfo.ispInfo.otherISP === 'object'
+                    ? (ispInfo.ispInfo.otherISP?.["Distance in Meter"] || ispInfo.ispInfo.otherISP?.Distance_in_Meter || "-")
+                    : "-"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Rest of the component remains the same */}
+      {/* Power Status Section */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-4 py-2 text-left border-b" colSpan={2}>Power Infrastructure</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="px-4 py-2 border-b font-medium w-2/5">Power Interruptions</td>
+              <td className="px-4 py-2 border-b">
+                {ispInfo?.ispInfo?.powerInterruption === "Yes" ? (
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                    Yes - {ispInfo?.ispInfo?.powerInterruptionFrequency}
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    No
+                  </span>
+                )}
+              </td>
+            </tr>
+            <tr className="bg-gray-50">
+              <td className="px-4 py-2 border-b font-medium">Backup Generator</td>
+              <td className="px-4 py-2 border-b">
+                {ispInfo?.ispInfo?.hasGenerator === "Yes" ? (
+                  <div>
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                      Available
+                    </span>
+                    {ispInfo?.ispInfo?.generatorPowersComputers && (
+                      <p className="text-sm mt-1">
+                        Powers computers: {ispInfo?.ispInfo?.generatorPowersComputers === "YES" || ispInfo?.ispInfo?.generatorPowersComputers === "Yes" ? "Yes" : "No"}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                    Not Available
+                  </span>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* ICT Environment Section */}
+      {Array.isArray(ispInfo?.ispInfo?.ictEnvironment) && ispInfo?.ispInfo?.ictEnvironment.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white border border-gray-200">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="px-4 py-2 text-left border-b" colSpan={4}>ICT Environment</th>
+              </tr>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-2 text-left border-b">Device Type</th>
+                <th className="px-4 py-2 text-center border-b">With Internet</th>
+                <th className="px-4 py-2 text-center border-b">Without Internet</th>
+                <th className="px-4 py-2 text-center border-b">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ispInfo?.ispInfo?.ictEnvironment.map((item: any, index: number) => {
+                const withInternet = Number(item["Number of Device with Internet Access"] || 0);
+                const withoutInternet = Number(item["Number of Device without Internet Access\n"] || 0);
+                const total = Number(item["Total Numbers of Device "] || 0);
+
+                return (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-4 py-2 border-b">{item["Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"]}</td>
+                    <td className="px-4 py-2 border-b text-center">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                        {withInternet}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 border-b text-center">
+                      <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                        {withoutInternet}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 border-b text-center font-medium">{total}</td>
+                  </tr>
+                );
+              })}
+              {/* Add a summary row with totals */}
+              {ispInfo?.ispInfo?.ictEnvironment.length > 1 && (
+                <tr className="bg-gray-100 font-semibold">
+                  <td className="px-4 py-2 border-b">Total</td>
+                  <td className="px-4 py-2 border-b text-center">
+                    {ispInfo?.ispInfo?.ictEnvironment.reduce((sum: number, item: any) => sum + Number(item["Number of Device with Internet Access"] || 0), 0)}
+                  </td>
+                  <td className="px-4 py-2 border-b text-center">
+                    {ispInfo?.ispInfo?.ictEnvironment.reduce((sum: number, item: any) => sum + Number(item["Number of Device without Internet Access\n"] || 0), 0)}
+                  </td>
+                  <td className="px-4 py-2 border-b text-center">
+                    {ispInfo?.ispInfo?.ictEnvironment.reduce((sum: number, item: any) => sum + Number(item["Total Numbers of Device "] || 0), 0)}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 
 const InfoCard = ({ label, value, span }: any) => (
   <div className={`bg-gray-50 p-4 rounded-lg border border-border col-span-${span ? span : 1}`}>
