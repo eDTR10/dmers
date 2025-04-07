@@ -1,6 +1,5 @@
 import {
     getCamiguinAverageScores,
-    getMisorAverageScores,
     // getLGUITReadinessScoreMaturity,  // Add the Maturity version
     // getLGUChangeManagementScoreMaturity  // Add the Maturity version
 } from '@/lib/functions/Referenced';
@@ -43,13 +42,12 @@ const DashboardComponents = () => {
     const [provinceData, setProvinceData] = useState<Record<string, any>>({});
     const [isLoading, setIsLoading] = useState(true);
     // Change selected LGU to selected province
-    const [selectedProvince, setSelectedProvince] = useState("Camiguin");
-    const [detailedData] = useState<any>(null);
-    const [showDetailedView] = useState(true);
+    const [selectedProvince, _setSelectedProvince] = useState("Camiguin");
+ 
     const [regionData, setRegionData] = useState<any>(null);
 
     // List of provinces for selection
-    const provinces = ["Camiguin", "Misor"];
+
 
     // Assessment categories for the chart
     const assessmentCategories = [
@@ -87,17 +85,11 @@ const DashboardComponents = () => {
     //     setShowDetailedView(!showDetailedView);
     // };
 
-    // Get detailed data for the selected province
-    const selectedDetailedData = detailedData &&
-        (selectedProvince === "Misor" ? detailedData.misor : detailedData.camiguin);
+
     // Get LGU count in the selected province
-    const lguCount = selectedProvince === "Camiguin" ?
-        getCamiguinAverageScores().lguCount :
-        getMisorAverageScores().lguCount;
+  
 
     // Get values for the selected province
-    const selectedValues = selectedProvince === "Misor" ? misorValues : camiguinValues;
-    const selectedOverallScore = selectedProvince === "Misor" ? misorOverallScore : camiguinOverallScore;
 
     // Fetch data on component mount
     useEffect(() => {
@@ -460,295 +452,7 @@ const DashboardComponents = () => {
                 </div>
             </div> */}
 
-            {/* Toggle button for detailed view */}
-            <div className="mb-4 flex justify-between items-center">
-                <div>
-                    {/* Province Selection Dropdown */}
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Select Province to Feature:
-                    </label>
-                    <select
-                        value={selectedProvince}
-                        onChange={(e) => setSelectedProvince(e.target.value)}
-                        className="block w-64 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    >
-                        {provinces.map(province => (
-                            <option key={province} value={province}>{province === "Misor" ? "Misamis Oriental" : province}</option>
-                        ))}
-                    </select>
-                </div>
-                {/* <button
-                    onClick={toggleDetailedView}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm"
-                >
-                    {showDetailedView ? "Show Summary View" : "Show Detailed Assessment"}
-                </button> */}
-            </div>
-
-            {isLoading ? (
-                <div className="flex justify-center items-center h-64">
-                    <p className="text-gray-500">Loading data...</p>
-                </div>
-            ) : (
-                <>
-                    {/* Show either the summary view or detailed view based on state */}
-                    {showDetailedView ? (
-                        // Original summary view
-                        <>
-                            {/* ...existing code for summary view... */}
-                            {/* Display selected province data */}
-                            {selectedProvinceData && (
-                                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <h3 className="text-lg font-medium mb-2">
-                                        Featured Province: {selectedProvince === "Misor" ? "Misamis Oriental" : selectedProvince}
-                                        <span className="text-sm text-gray-500 ml-2">({lguCount} LGUs with data)</span>
-                                    </h3>
-
-                                    <div className="flex flex-col ">
-                                        {/* Radar Chart */}
-                                        <div className=" mt-4 ">
-                                            <div className="bg-white p-3 rounded shadow-sm h-full">
-                                                <ProvinceRadarChart
-                                                    categories={assessmentCategories}
-                                                    values={selectedValues}
-                                                    provinceName={selectedProvince === "Misor" ? "Misamis Oriental" : selectedProvince}
-                                                    color={selectedProvince === "Misor" ? "#2563EB" : "#EAB308"}
-                                                    showDataLabels={false} // Add this to hide the data labels on this chart
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Metric Cards */}
-                                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4 ">
-                                            <div className="bg-white p-3 rounded shadow-sm">
-                                                <div className="text-sm text-gray-500">Overall Score</div>
-                                                <div className="text-xl font-bold text-blue-600">{selectedOverallScore.toFixed(2)}%</div>
-                                            </div>
-                                            <div className="bg-white p-3 rounded shadow-sm">
-                                                <div className="text-sm text-gray-500">Digital Skills</div>
-                                                <div className="text-xl font-bold text-green-600">{selectedProvinceData.digitalSkills.toFixed(2)}%</div>
-                                            </div>
-                                            <div className="bg-white p-3 rounded shadow-sm">
-                                                <div className="text-sm text-gray-500">Tech Readiness</div>
-                                                <div className="text-xl font-bold text-yellow-600">{selectedProvinceData.technologyReadiness.toFixed(2)}%</div>
-                                            </div>
-                                            <div className="bg-white p-3 rounded shadow-sm">
-                                                <div className="text-sm text-gray-500">IT Readiness</div>
-                                                <div className="text-xl font-bold text-purple-600">{selectedProvinceData.itReadiness.toFixed(2)}%</div>
-                                            </div>
-                                            <div className="bg-white p-3 rounded shadow-sm">
-                                                <div className="text-sm text-gray-500">Change Management</div>
-                                                <div className="text-xl font-bold text-red-600">{selectedProvinceData.changeManagement.toFixed(2)}%</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-
-
-                            {/* Line Chart */}
-
-
-
-
-
-                            {/* <div className="mt-6 border-t pt-6">
-                                <h3 className="text-lg font-medium mb-4">Key Insights</h3>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li>
-                                        <span className="font-medium">Digital Skills Assessment:</span> {misorValues[0] > camiguinValues[0] ? 'Misamis Oriental' : 'Camiguin'} demonstrates {Math.abs(misorValues[0] - camiguinValues[0]).toFixed(2)}% {misorValues[0] > camiguinValues[0] ? 'higher' : 'better'} digital competency scores.
-                                        This suggests that {misorValues[0] > camiguinValues[0] ? 'Misamis Oriental' : 'Camiguin'} LGUs have more effectively developed their workforce's digital literacy and technical capabilities.
-                                    </li>
-                                    <li>
-                                        <span className="font-medium">Technology Readiness:</span> With a score of {(camiguinValues[1] > misorValues[1] ? camiguinValues[1] : misorValues[1]).toFixed(2)}%,
-                                        {camiguinValues[1] > misorValues[1] ? ' Camiguin' : ' Misamis Oriental'} exhibits greater openness to new technologies.
-                                        This indicates stronger potential for successful technology adoption and implementation in future digital initiatives.
-                                    </li>
-                                    <li>
-                                        <span className="font-medium">ICT Change Management:</span> {misorValues[2] > camiguinValues[2] ? 'Misamis Oriental' : 'Camiguin'} leads with {Math.abs(misorValues[2] - camiguinValues[2]).toFixed(2)}% higher change management maturity,
-                                        reflecting stronger frameworks for planning and implementing technological changes with minimal disruption to operations.
-                                    </li>
-                                    <li>
-                                        <span className="font-medium">IT Readiness:</span> With a score of {(misorValues[3] > camiguinValues[3] ? misorValues[3] : camiguinValues[3]).toFixed(2)}%,
-                                        {misorValues[3] > camiguinValues[3] ? ' Misamis Oriental' : ' Camiguin'} demonstrates better IT infrastructure and governance readiness.
-                                        This indicates {misorValues[3] > camiguinValues[3] ? 'Misor' : 'Camiguin'} may be better positioned for technical implementations.
-                                    </li>
-                                    <li>
-                                        <span className="font-medium">Overall Assessment:</span> {misorOverallScore > camiguinOverallScore ? 'Misamis Oriental' : 'Camiguin'} has achieved a {Math.abs(misorOverallScore - camiguinOverallScore).toFixed(2)}%
-                                        higher overall digital maturity score, suggesting {misorOverallScore > camiguinOverallScore ? 'Misor' : 'Camiguin'} LGUs collectively demonstrate more advanced digital transformation progress.
-                                    </li>
-                                    <li>
-                                        <span className="font-medium">Recommendation:</span> Both provinces would benefit from targeted interventions in their lowest-scoring areas:
-                                        {misorValues.indexOf(Math.min(...misorValues)) === 0 ? ' Digital Skills' :
-                                            misorValues.indexOf(Math.min(...misorValues)) === 1 ? ' Technology Readiness' :
-                                                misorValues.indexOf(Math.min(...misorValues)) === 2 ? ' ICT Change Management' : ' IT Readiness'} for Misamis Oriental and
-                                        {camiguinValues.indexOf(Math.min(...camiguinValues)) === 0 ? ' Digital Skills' :
-                                            camiguinValues.indexOf(Math.min(...camiguinValues)) === 1 ? ' Technology Readiness' :
-                                                camiguinValues.indexOf(Math.min(...camiguinValues)) === 2 ? ' ICT Change Management' : ' IT Readiness'} for Camiguin.
-                                    </li>
-                                </ul>
-                            </div> */}
-                        </>
-                    ) : (
-                        // Detailed Assessment View
-                        selectedDetailedData && (
-                            <div className="space-y-8">
-                                <h3 className="text-xl font-bold">
-                                    Detailed Assessment for {selectedProvince === "Misor" ? "Misamis Oriental" : selectedProvince}
-                                </h3>
-
-                                {/* Digital Skills Assessment */}
-                                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                    <h4 className="text-lg font-medium mb-4 text-green-700">Digital Skills Assessment</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="text-sm text-gray-600 mb-2">Overall Score: <span className="font-bold text-green-600">{selectedDetailedData.digitalSkills.overall.toFixed(2)}%</span></p>
-                                            <p className="text-sm text-gray-600 mb-2">Top Performing Area: <span className="font-medium">{selectedDetailedData.digitalSkills.topPerforming}</span></p>
-                                            <p className="text-sm text-gray-600 mb-2">Area Needing Improvement: <span className="font-medium">{selectedDetailedData.digitalSkills.bottomPerforming}</span></p>
-                                        </div>
-                                        <div>
-                                            <h5 className="text-sm font-medium mb-2">Question Scores</h5>
-                                            <div className="overflow-y-auto max-h-40">
-                                                {selectedDetailedData.digitalSkills.questions.map((q: any, i: number) => (
-                                                    <div key={i} className="flex justify-between items-center text-sm mb-1">
-                                                        <span className="truncate mr-4" title={q.question}>{q.question}</span>
-                                                        <span className="font-medium">{q.score.toFixed(2)}%</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Technology Readiness Index */}
-                                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                    <h4 className="text-lg font-medium mb-4 text-yellow-700">Technology Readiness Index</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="text-sm text-gray-600 mb-2">Overall Score: <span className="font-bold text-yellow-600">{selectedDetailedData.technologyReadiness.overall.toFixed(2)}%</span></p>
-                                            <p className="text-sm text-gray-600 mb-2">Strongest Dimension: <span className="font-medium">{selectedDetailedData.technologyReadiness.highestDimension.dimension} ({selectedDetailedData.technologyReadiness.highestDimension.score.toFixed(2)}%)</span></p>
-                                            <p className="text-sm text-gray-600 mb-2">Challenging Dimension: <span className="font-medium">{selectedDetailedData.technologyReadiness.lowestDimension.dimension} ({selectedDetailedData.technologyReadiness.lowestDimension.score.toFixed(2)}%)</span></p>
-                                        </div>
-                                        <div>
-                                            <h5 className="text-sm font-medium mb-2">TRI Dimensions</h5>
-                                            {selectedDetailedData.technologyReadiness.dimensions.map((dim: any, i: number) => (
-                                                <div key={i} className="flex justify-between items-center text-sm mb-1">
-                                                    <span>{dim.dimension}</span>
-                                                    <span className="font-medium">{dim.score.toFixed(2)}%</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* IT Readiness Assessment */}
-                                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                    <h4 className="text-lg font-medium mb-4 text-purple-700">IT Readiness Assessment</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="text-sm text-gray-600 mb-2">Overall Score: <span className="font-bold text-purple-600">{selectedDetailedData.itReadiness.overall.toFixed(2)}%</span></p>
-                                            <h5 className="text-sm font-medium mt-4 mb-2">Top Performing Categories</h5>
-                                            {selectedDetailedData.itReadiness.topCategories.map((cat: any, i: number) => (
-                                                <div key={i} className="flex justify-between items-center text-sm mb-1">
-                                                    <span>{cat.category}</span>
-                                                    <span className="font-medium">{cat.score.toFixed(2)}%</span>
-                                                </div>
-                                            ))}
-                                            <h5 className="text-sm font-medium mt-4 mb-2">Areas for Improvement</h5>
-                                            {selectedDetailedData.itReadiness.bottomCategories.map((cat: any, i: number) => (
-                                                <div key={i} className="flex justify-between items-center text-sm mb-1">
-                                                    <span>{cat.category}</span>
-                                                    <span className="font-medium">{cat.score.toFixed(2)}%</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div>
-                                            <h5 className="text-sm font-medium mb-2">All Categories</h5>
-                                            <div className="overflow-y-auto max-h-60">
-                                                {selectedDetailedData.itReadiness.categories.map((cat: any, i: number) => (
-                                                    <div key={i} className="flex justify-between items-center text-sm mb-1">
-                                                        <span>{cat.category}</span>
-                                                        <span className="font-medium">{cat.score.toFixed(2)}%</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Change Management Assessment */}
-                                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                    <h4 className="text-lg font-medium mb-4 text-red-700">ICT Change Management</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="text-sm text-gray-600 mb-2">Overall Score: <span className="font-bold text-red-600">{selectedDetailedData.changeManagement.overall.toFixed(2)}%</span></p>
-                                            <h5 className="text-sm font-medium mt-4 mb-2">Top Performing Categories</h5>
-                                            {selectedDetailedData.changeManagement.topCategories.map((cat: any, i: number) => (
-                                                <div key={i} className="flex justify-between items-center text-sm mb-1">
-                                                    <span>{cat.category}</span>
-                                                    <span className="font-medium">{cat.score.toFixed(2)}%</span>
-                                                </div>
-                                            ))}
-                                            <h5 className="text-sm font-medium mt-4 mb-2">Areas for Improvement</h5>
-                                            {selectedDetailedData.changeManagement.bottomCategories.map((cat: any, i: number) => (
-                                                <div key={i} className="flex justify-between items-center text-sm mb-1">
-                                                    <span>{cat.category}</span>
-                                                    <span className="font-medium">{cat.score.toFixed(2)}%</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div>
-                                            <h5 className="text-sm font-medium mb-2">All Categories</h5>
-                                            <div className="overflow-y-auto max-h-60">
-                                                {selectedDetailedData.changeManagement.categories.map((cat: any, i: number) => (
-                                                    <div key={i} className="flex justify-between items-center text-sm mb-1">
-                                                        <span>{cat.category}</span>
-                                                        <span className="font-medium">{cat.score.toFixed(2)}%</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* LGUs Performance Table */}
-                                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                    <h4 className="text-lg font-medium mb-4">LGU Performance Breakdown</h4>
-                                    <div className="overflow-x-auto">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-50">
-                                                <tr>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGU</th>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Score</th>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Digital Skills</th>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tech Readiness</th>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IT Readiness</th>
-                                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Change Mgmt</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="bg-white divide-y divide-gray-200">
-                                                {selectedDetailedData.lgusData
-                                                    .sort((a: any, b: any) => b.overallScore - a.overallScore)
-                                                    .map((lgu: any, i: number) => (
-                                                        <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                                            <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{lgu.lguName}</td>
-                                                            <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">{lgu.overallScore.toFixed(2)}%</td>
-                                                            <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">{lgu.digitalSkills.toFixed(2)}%</td>
-                                                            <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">{lgu.techReadiness.toFixed(2)}%</td>
-                                                            <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">{lgu.itReadiness.toFixed(2)}%</td>
-                                                            <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">{lgu.changeManagement.toFixed(2)}%</td>
-                                                        </tr>
-                                                    ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    )}
-                </>
-            )}
+          
         </div>
     );
 };
