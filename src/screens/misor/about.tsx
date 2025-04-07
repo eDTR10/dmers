@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import Data from './../../assets/data/eReadinessSurveyData.json';
 import { Line } from 'react-chartjs-2';
@@ -36,6 +36,10 @@ function About() {
   const [selectedAssessment, setSelectedAssessment] = useState('DIGITAL SKILLS ASSESSMENT');
   const [officesWithData, setOfficesWithData] = useState<string[]>([]);
   const [selectedOffice, setSelectedOffice] = useState<string>("All Offices");
+
+  const [selectedOfficeType, setSelectedOfficeType] = useState("IT Office");
+const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits and Licensing Office");
+
 
   // Update the useEffect to use the new scores
   useEffect(() => {
@@ -1057,6 +1061,177 @@ function About() {
       </tbody>
     </table>
   </div>
+  <div className="w-full overflow-x-auto mt-8">
+  <h3 className="text-xl font-semibold mb-4">ICT Environment</h3>
+  
+  {/* Office Selection Dropdowns */}
+  <div className="flex gap-4 mb-4">
+    <select 
+      className="border border-gray-300 rounded-md px-4 py-2"
+      onChange={(e) => {
+        setSelectedOfficeType(e.target.value);
+        setSelectedOtherOffice("");
+      }}
+      value={selectedOfficeType}
+    >
+      <option value="IT Office">IT Office</option>
+      <option value="HR Office">HR Office</option>
+      <option value="Mayors Office">Mayor's Office</option>
+      <option value="Other Offices">Other Offices</option>
+    </select>
+
+    {selectedOfficeType === "Other Offices" && (
+      <select
+        className="border border-gray-300 rounded-md px-4 py-2"
+        onChange={(e) => setSelectedOtherOffice(e.target.value)}
+        value={selectedOtherOffice}
+        required
+      >
+        <option value="">Select Office</option>
+        {Data["Other Offices"]
+          .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+          .map((office: any, index: number) => (
+            <option key={index} value={office["Office Name"]}>
+              {office["Office Name"]}
+            </option>
+          ))}
+      </select>
+    )}
+  </div>
+
+  {/* Computing Devices Table */}
+  <table className="min-w-full bg-white border border-gray-200">
+    <thead>
+      <tr className="bg-gray-100">
+        <th className="px-4 py-2 text-left border-b">Device Type</th>
+        <th className="px-4 py-2 text-center border-b">With Internet</th>
+        <th className="px-4 py-2 text-center border-b">Without Internet</th>
+      </tr>
+    </thead>
+    <tbody>
+      {selectedOfficeType === "IT Office" ? (
+        // IT Office Data
+        Data["IT Office"]
+          .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+          .map((office: any) => {
+            let computingDevices = [];
+            try {
+              computingDevices = JSON.parse(
+                office["C. INFORMATION AND COMMUNICATIONS TECHNOLOGY ENVIRONMENT"]
+                  ?.replace(/'/g, '"') || "[]"
+              );
+            } catch (error) {
+              console.error("Error parsing computing devices data:", error);
+              computingDevices = [];
+            }
+            return computingDevices.map((device: any, index: number) => (
+              <tr key={index} className="bg-gray-50">
+                <td className="px-4 py-2 border-b">
+                  {device["ICT_Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"] === 1 ? "Desktop/Laptop" :
+                   device["ICT_Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"] === 2 ? "Smartphones/Tablets" : "N/A"}
+                </td>
+                <td className="px-4 py-2 text-center border-b">
+                  {device["ICT_Number of Device with Internet Access"] || "0"}
+                </td>
+                <td className="px-4 py-2 text-center border-b">
+                  {device["ICT_Number of Device without Internet Access"] || "0"}
+                </td>
+              </tr>
+            ));
+          })
+      ) : (
+        // Other Offices Data
+        (Data as { [key: string]: any[] })[selectedOfficeType === "Other Offices" ? "Other Offices" : selectedOfficeType]
+          .filter((item: any) => {
+            if (selectedOfficeType === "Other Offices") {
+              return item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase() && 
+                     item["Office Name"] === selectedOtherOffice;
+            }
+            return item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase();
+          })
+          .map((office: any) => (
+            <React.Fragment key={office["Office Name"]}>
+              <tr className="bg-gray-50">
+                <td className="px-4 py-2 border-b">Desktop</td>
+                <td className="px-4 py-2 text-center border-b">{office["Desktop - With Internet"] || "0"}</td>
+                <td className="px-4 py-2 text-center border-b">{office["Desktop - Without Internet"] || "0"}</td>
+              </tr>
+              <tr className="bg-gray-50">
+                <td className="px-4 py-2 border-b">Laptop</td>
+                <td className="px-4 py-2 text-center border-b">{office["Laptop - With Internet"] || "0"}</td>
+                <td className="px-4 py-2 text-center border-b">{office["Laptop - Without Internet"] || "0"}</td>
+              </tr>
+              <tr className="bg-gray-50">
+                <td className="px-4 py-2 border-b">Smartphone</td>
+                <td className="px-4 py-2 text-center border-b">{office["Smartphone - With Internet"] || "0"}</td>
+                <td className="px-4 py-2 text-center border-b">{office["Smartphone - Without Internet"] || "0"}</td>
+              </tr>
+              <tr className="bg-gray-50">
+                <td className="px-4 py-2 border-b">Tablet</td>
+                <td className="px-4 py-2 text-center border-b">{office["Tablet - With Internet"] || "0"}</td>
+                <td className="px-4 py-2 text-center border-b">{office["Tablet - Without Internet"] || "0"}</td>
+              </tr>
+              <tr className="bg-gray-50">
+                <td className="px-4 py-2 border-b">Others</td>
+                <td className="px-4 py-2 text-center border-b">{office["Others - With Internet"] || "0"}</td>
+                <td className="px-4 py-2 text-center border-b">{office["Others - Without Internet"] || "0"}</td>
+              </tr>
+            </React.Fragment>
+          ))
+      )}
+    </tbody>
+  </table>
+
+  {/* Power Supply Section - Only for IT Office */}
+  {selectedOfficeType && Data["IT Office"]
+    .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+    .map((office: any, index: number) => (
+      <div key={index} className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Power Supply Information</h3>
+        <table className="min-w-full bg-white border border-gray-200">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-4 py-2 text-left border-b" colSpan={2}>Category</th>
+              <th className="px-4 py-2 text-left border-b">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="bg-white">
+              <td className="px-4 py-2 border-b font-medium" rowSpan={3}>Power Supply</td>
+              <td className="px-4 py-2 border-b">Power Interruption</td>
+              <td className="px-4 py-2 border-b">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  office["Do you experience power interruption?"] === "Yes" 
+                    ? "bg-red-100 text-red-800" 
+                    : "bg-green-100 text-green-800"
+                }`}>
+                  {office["Do you experience power interruption?"]}
+                </span>
+              </td>
+            </tr>
+            <tr className="bg-white">
+              <td className="px-4 py-2 border-b">Frequency</td>
+              <td className="px-4 py-2 border-b">
+                {office["If Yes, how often? (Number of hours per working days)"] || "N/A"}
+              </td>
+            </tr>
+            <tr className="bg-white">
+              <td className="px-4 py-2 border-b">Backup Generator</td>
+              <td className="px-4 py-2 border-b">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  office["Is there a backup generator?"] === "Yes" 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  {office["Is there a backup generator?"]}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    ))}
+</div>
               </div>
 
               <div className="  sm:hidden  col-span-2 flex justify-center items-start">

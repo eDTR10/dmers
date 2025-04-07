@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import Data from './../../assets/data/eReadinessSurveyData.json';
 import { Line } from 'react-chartjs-2';
@@ -36,6 +36,7 @@ function About() {
   const [selectedAssessment, setSelectedAssessment] = useState('DIGITAL SKILLS ASSESSMENT');
   const [officesWithData, setOfficesWithData] = useState<string[]>([]);
   const [selectedOffice, setSelectedOffice] = useState<string>("All Offices");
+  
 
   // Update the useEffect to use the new scores
   useEffect(() => {
@@ -1059,6 +1060,108 @@ function About() {
       </tbody>
     </table>
   </div>
+
+
+  <div className="w-full overflow-x-auto mt-8">
+  <h3 className="text-xl font-semibold mb-4">ICT Environment</h3>
+  <table className="min-w-full bg-white border border-gray-200">
+    <thead>
+      <tr className="bg-gray-100">
+        <th className="px-4 py-2 text-left border-b" colSpan={2}>Category</th>
+        <th className="px-4 py-2 text-left border-b">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      {Data["IT Office"]
+        .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+        .map((office: any, _index: number) => {
+          let computingDevices = [];
+          try {
+            computingDevices = JSON.parse(
+              office["C. INFORMATION AND COMMUNICATIONS TECHNOLOGY ENVIRONMENT"]
+                ?.replace(/'/g, '"') || "[]"
+            );
+          } catch (error) {
+            console.error("Error parsing computing devices data:", error);
+            computingDevices = [];
+          }
+          return (
+            <>
+              {/* Computing Devices Section */}
+              <tr className="bg-gray-50">
+                <td className="px-4 py-2 border-b font-medium" rowSpan={computingDevices.length * 3}>
+                  Computing Devices
+                </td>
+                <td className="px-4 py-2 border-b">Device Type</td>
+                <td className="px-4 py-2 border-b">
+                  {computingDevices[0]?.["ICT_Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"] === 1 ? "Desktop/Laptop" :
+                   computingDevices[0]?.["ICT_Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"] === 2 ? "Smartphones/Tablets" :
+                   computingDevices[0]?.["Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"] || "N/A"}
+                </td>
+              </tr>
+              {computingDevices.map((device: any, deviceIndex: number) => (
+                <React.Fragment key={deviceIndex}>
+                  {deviceIndex > 0 && (
+                    <tr className="bg-gray-50">
+                      <td className="px-4 py-2 border-b">Device Type</td>
+                      <td className="px-4 py-2 border-b">
+                        {device["ICT_Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"] === 1 ? "Desktop/Laptop" :
+                         device["ICT_Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"] === 2 ? "Smartphones/Tablets" : "N/A"}
+                      </td>
+                    </tr>
+                  )}
+                  <tr className="bg-gray-50">
+                    <td className="px-4 py-2 border-b">With Internet Access</td>
+                    <td className="px-4 py-2 border-b">{device["ICT_Number of Device with Internet Access"] || "0"}</td>
+                  </tr>
+                  <tr className="bg-gray-50">
+                    <td className="px-4 py-2 border-b">Without Internet Access</td>
+                    <td className="px-4 py-2 border-b">{device["ICT_Number of Device without Internet Access"] || "0"}</td>
+                  </tr>
+                </React.Fragment>
+              ))}
+
+              {/* Power Supply Section */}
+              <tr className="bg-white">
+                <td className="px-4 py-2 border-b font-medium" rowSpan={3}>Power Supply</td>
+                <td className="px-4 py-2 border-b">Power Interruption</td>
+                <td className="px-4 py-2 border-b">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    office["Do you experience power interruption?"] === "Yes" 
+                      ? "bg-red-100 text-red-800" 
+                      : "bg-green-100 text-green-800"
+                  }`}>
+                    {office["Do you experience power interruption?"]}
+                  </span>
+                </td>
+              </tr>
+              <tr className="bg-white">
+                <td className="px-4 py-2 border-b">Frequency</td>
+                <td className="px-4 py-2 border-b">{office["If Yes, how often? (Number of hours per working days)"] || "N/A"}</td>
+              </tr>
+              <tr className="bg-white">
+                <td className="px-4 py-2 border-b">Backup Generator</td>
+                <td className="px-4 py-2 border-b">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    office["Is there a backup generator?"] === "Yes" 
+                      ? "bg-green-100 text-green-800" 
+                      : "bg-red-100 text-red-800"
+                  }`}>
+                    {office["Is there a backup generator?"]}
+                  </span>
+                </td>
+              </tr>
+            </>
+          );
+        })}
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
               </div>
 
               <div className="  sm:hidden  col-span-2 flex justify-center items-start">
