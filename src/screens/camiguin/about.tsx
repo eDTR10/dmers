@@ -12,6 +12,9 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import { ArrowLeft } from 'lucide-react';
+
+import { useNavigate } from 'react-router-dom';;
 
 // Register ChartJS components
 ChartJS.register(
@@ -42,6 +45,7 @@ interface ConnectivityTableProps {
 
 function About() {
   const { lguName } = useParams();
+  const navigate = useNavigate();
   const location = useLocation();
   const [lguInfo, setLguInfo] = useState<any>(null);
   const [score, setScore] = useState(0);
@@ -927,11 +931,22 @@ function About() {
   return (
     <div className="min-h-full w-full py-10 flex items-center justify-center">
       <div className="p-5 h-full relative  w-[95%] flex flex-col bg-card/25 border border-border border-b-0 rounded-lg   ">
-        <h1 className="py-4 px-2 text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
+        
+        
+        <div className=' w-full flex gap-3'>
+          <h1 className="py-4 px-2 w-full text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
           {`${lguInfo["LGU Name"]}, ${lguInfo.Province}`}
 
 
         </h1>
+
+         <div onClick={() => navigate("/camiguin")} className=' rounded-none py-4 px-2 flex gap-2 items-center justify-center sm:w-[50px]   w-[100px] hover:bg-[#c50035] hover:text-white  text-center font-bold cursor-pointer  mb-4 border text-[#c50035] border-[#c50035]'>
+                    
+                    <ArrowLeft size={30}  className='w-4 h-4 inline-block' />
+                    Back
+                </div>
+        </div>
+        
 
         <div className="bg-white h-full p-6 rounded-lg border border-border ">
           <div className="flex relative h-full justify-between md:items-end items-center md:flex-col">
@@ -962,7 +977,7 @@ function About() {
 
         <div className="border-b w-full border-gray-200">
           <nav className="flex">
-            {['About', 'Assessment', 'Attachments'].map(tab => (
+            {['About', 'Assessment'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -1278,7 +1293,7 @@ function About() {
             </div>
           )}
           {activeTab === 'Assessment' && renderAssessmentContent()}
-          {activeTab === 'Attachments' && (
+          {/* {activeTab === 'Attachments' && (
   <div className="w-full overflow-x-auto">
     <h3 className="text-xl font-semibold mb-4">Employee Distribution by Office</h3>
     <table className="min-w-full bg-white border border-gray-200">
@@ -1349,7 +1364,7 @@ function About() {
       </tbody>
     </table>
   </div>
-)}
+)} */}
         </div>
       </div>
     </div>
