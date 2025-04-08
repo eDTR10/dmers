@@ -1,6 +1,7 @@
 import  { useState, useEffect } from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title } from 'chart.js';
-import { Pie, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title, BarElement } from 'chart.js';
+import { Bar, Line } from 'react-chartjs-2';
+
 import { useNavigate } from 'react-router-dom';
 ;
 import Dashboard from '@/components/chart/Maturity';
@@ -10,7 +11,7 @@ import rawData from './../../assets/data/eReadinessSurveyData.json';
 const Data: any = rawData;
 
 // Register Chart.js components
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title);
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title,BarElement);
 
 // Helper functions
 const calculateAverage = (values: number[]) => {
@@ -268,16 +269,7 @@ function Camiguin() {
 
 
   // Modified pie chart data to use only two colors alternately
-  const pieData = {
-    labels: lguData.map((lgu:any) => lgu.name),
-    datasets: [
-      {
-        data: lguData.map((lgu:any) => lgu.score),
-        backgroundColor: lguData.map((_, index) => index % 2 === 0 ? '#0036C5' : '#ECC217'),
-        borderWidth: 1,
-      },
-    ],
-  };
+
 
   // Handle LGU click
   const handleLguClick = (lgu:any) => {
@@ -383,39 +375,79 @@ function Camiguin() {
       />
             {/* Pie Chart */}
             <div className="bg-white p-4 border border-gray-200 rounded-lg">
-              <h2 className="text-lg font-medium mb-4">LGUs Assessment Scores</h2>
-              <div className="h-[300px] flex justify-center">
-              <Pie 
-  data={pieData} 
-  options={{
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          boxWidth: 12
-        }
-      },
-      // Enable the plugin specifically for this chart
-      datalabels: {
-        display: true,
-        color: '#fff',
-        font: {
-          weight: 'bold',
-          size: 10
-        },
-        formatter: (value) => {
-          return `${Math.round(value)}%`;
-        },
-        align: 'center',
-        anchor: 'center'
-      }
-    }
-  }}
-  plugins={[ChartDataLabels]} // Add plugin locally
-/>
-              </div>
-            </div>
+  <h2 className="text-base font-medium mb-4">LGUs Assessment Scores</h2>
+  <div className="min-h-[200px]"> {/* Increased height from 100px */}
+    <div style={{ minHeight: `${lguData.length * 45}px` }}> {/* Increased row height from 30px to 45px */}
+      <Bar 
+        data={{
+          labels: lguData.map((lgu: any) => lgu.name),
+          datasets: [{
+            label: 'Assessment Score',
+            data: lguData.map((lgu: any) => lgu.score),
+            backgroundColor: lguData.map((_, index) => 
+              index % 2 === 0 ? '#0036C5' : '#ECC217'
+            ),
+            borderWidth: 1,
+            barThickness: 25, // Increased from 20 to 25
+            maxBarThickness: 30,
+          }]
+        }}
+        options={{
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                },
+                font: {
+                  size: 12 // Increased font size
+                }
+              }
+            },
+            y: {
+              ticks: {
+                autoSkip: false,
+                padding: 8, // Increased padding
+                font: {
+                  size: 12 // Increased font size
+                }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            datalabels: {
+              display: true,
+              color: '#000',
+              anchor: 'end',
+              align: 'end',
+              formatter: (value) => `${value}%`,
+              font: {
+                weight: 'bold',
+                size: 12
+              },
+              padding: 6 // Added padding for labels
+            }
+          },
+          layout: {
+            padding: {
+              right: 30, // Increased right padding
+              top: 10,
+              bottom: 10
+            }
+          }
+        }}
+        plugins={[ChartDataLabels]}
+      />
+    </div>
+  </div>
+</div>
             
             {/* Line Chart */}
             <div className="bg-white p-4 border border-gray-200 rounded-lg">
