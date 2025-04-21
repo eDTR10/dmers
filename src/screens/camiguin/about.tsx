@@ -2171,7 +2171,7 @@ const assData: any = [
   {
     title: "DIGITAL SKILLS ASSESSMENT",
     data: [
-      "Basic computer skill",
+      "Basic computer skills",
       "Basic Internet searching",
       "General computer or office productivity software use",
       "Use of collaborative platforms",
@@ -2179,8 +2179,8 @@ const assData: any = [
       "Use of social media",
       "Content creation",
       "Cybersecurity awareness",
-      "Programming, web, and app dev...",
-      "Digital design and data vi..."
+      "Programming, web, and app development",
+      "Digital design and data visualization"
     ]
   },
   {

@@ -956,7 +956,7 @@ const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits
 
         <div className="bg-white h-full p-6 rounded-lg border border-border ">
           <div className="flex relative h-full justify-between md:items-end items-center md:flex-col">
-            <div className="w-[80%] md:w-full ">
+            <div className="w-[80%] md:w-full z-30 ">
               <div className="grid grid-cols-3 gap-6">
                 <InfoCard span="2" label="Municipality" value={lguInfo["LGU Name"]} />
                 <InfoCard label="Income Class" value={lguInfo["Income Class"]} />
@@ -974,7 +974,7 @@ const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits
             </div>
             <div className=' w-[30%] md:w-full  h-full flex flex-col  items-center md:items-end '>
               <ScoreCircle score={Math.round(score)} />
-              <h1 className=' absolute bottom-0 right-0 md:left-0  font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
+              <h1 className=' absolute bottom-0 z-0 right-0 md:left-0  font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
 
 
             </div>
@@ -1933,14 +1933,14 @@ const ISPInformationTable = ({ lguName, data }: { lguName: string, data: any }) 
 
 
 const InfoCard = ({ label, value, span }: any) => (
-  <div className={`bg-gray-50 p-4 rounded-lg border border-border col-span-${span ? span : 1}`}>
+  <div className={`bg-gray-50/30 backdrop-blur-sm p-4 rounded-lg border border-border col-span-${span ? span : 1}`}>
     <div className="text-sm text-gray-700 mb-1">{label}</div>
     <div className="font-bold text-lg">{value}</div>
   </div>
 );
 
 const ScoreCircle = ({ score }: { score: number }) => (
-  <div className="flex flex-col items-center">
+  <div className="flex flex-col items-center z-10">
     <div className="text-xl font-bold text-[#0036C5] mb-2">Score</div>
     <div className="relative w-40 h-40 sm:w-44 sm:h-44">
       <svg
@@ -2178,7 +2178,7 @@ const assData: any = [
   {
     title: "DIGITAL SKILLS ASSESSMENT",
     data: [
-      "Basic computer skill",
+      "Basic computer skills",
       "Basic Internet searching",
       "General computer or office productivity software use",
       "Use of collaborative platforms",
@@ -2186,8 +2186,8 @@ const assData: any = [
       "Use of social media",
       "Content creation",
       "Cybersecurity awareness",
-      "Programming, web, and app dev...",
-      "Digital design and data vi..."
+      "Programming, web, and app development",
+      "Digital design and data visualization"
     ]
   },
   {

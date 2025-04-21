@@ -323,8 +323,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Process Digital Skills Assessment data
   const processDigitalSkillsData = () => {
-    const digitalSkillsLabels = [
-      "Basic computer skill",
+    const digitalSkillsLabels =  [
+      "Basic computer skills",
       "Basic Internet searching",
       "General computer or office productivity software use",
       "Use of collaborative platforms",
@@ -332,9 +332,9 @@ const Dashboard: React.FC<DashboardProps> = ({
       "Use of social media",
       "Content creation",
       "Cybersecurity awareness",
-      "Programming, web, and app dev...",
-      "Digital design and data vi..."
-    ];
+      "Programming, web, and app development",
+      "Digital design and data visualization"
+    ]
 
     const allOfficesData = getAllOfficesData();
 
