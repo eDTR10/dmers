@@ -43,6 +43,7 @@ interface ConnectivityTableProps {
 }
 
 
+
 function About() {
   const { lguName } = useParams();
   const navigate = useNavigate();
@@ -56,10 +57,10 @@ function About() {
   const [selectedAssessment, setSelectedAssessment] = useState('DIGITAL SKILLS ASSESSMENT');
   const [officesWithData, setOfficesWithData] = useState<string[]>([]);
   const [selectedOffice, setSelectedOffice] = useState<string>("All Offices");
-    const [selectedOfficeType, setSelectedOfficeType] = useState("IT Office");
-  const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits and Licensing Office");
-  
-  
+
+  const [selectedOfficeType, setSelectedOfficeType] = useState("IT Office");
+const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits and Licensing Office");
+
 
   // Update the useEffect to use the new scores
   useEffect(() => {
@@ -385,6 +386,11 @@ function About() {
     };
   }
 
+  /**
+   * Component to render the LGU website and IT infrastructure information
+   * @param lguName The name of the LGU
+   * @param data The survey data
+   */
   const ITInfrastructureInfo = ({ lguName, data }: { lguName: string, data: any }) => {
     const websiteInfo = getLGUWebsiteInfo(lguName, data);
 
@@ -932,25 +938,25 @@ function About() {
     <div className="min-h-full w-full py-10 flex items-center justify-center">
       <div className="p-5 h-full relative  w-[95%] flex flex-col bg-card/25 border border-border border-b-0 rounded-lg   ">
         
+         <div className=' w-full flex gap-3'>
+                  <h1 className="py-4 px-2 w-full text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
+                  {`${lguInfo["LGU Name"]}, Camiguin`}
         
-        <div className=' w-full flex gap-3'>
-          <h1 className="py-4 px-2 w-full text-center font-bold text-xl mb-4 border text-[#0036C5] border-[#0036C5]">
-          {`${lguInfo["LGU Name"]}, ${lguInfo.Province}`}
-
-
-        </h1>
-
-         <div onClick={() => navigate("/camiguin")} className=' rounded-none py-4 px-2 flex gap-2 items-center justify-center sm:w-[50px]   w-[100px] hover:bg-[#c50035] hover:text-white  text-center font-bold cursor-pointer  mb-4 border text-[#c50035] border-[#c50035]'>
-                    
-                    <ArrowLeft size={30}  className='w-4 h-4 inline-block' />
-                    Back
+        
+                </h1>
+        
+                 <div onClick={() => navigate("/camiguin")} className=' rounded-none py-4 px-2 flex gap-2 items-center justify-center sm:w-[50px]   w-[100px] hover:bg-[#c50035] hover:text-white  text-center font-bold cursor-pointer  mb-4 border text-[#c50035] border-[#c50035]'>
+                            
+                            <ArrowLeft size={30}  className='w-4 h-4 inline-block' />
+                            Back
+                        </div>
                 </div>
-        </div>
         
+       
 
         <div className="bg-white h-full p-6 rounded-lg border border-border ">
           <div className="flex relative h-full justify-between md:items-end items-center md:flex-col">
-            <div className="w-[80%] md:w-full ">
+            <div className="w-[80%] md:w-full z-30 ">
               <div className="grid grid-cols-3 gap-6">
                 <InfoCard span="2" label="Municipality" value={lguInfo["LGU Name"]} />
                 <InfoCard label="Income Class" value={lguInfo["Income Class"]} />
@@ -968,7 +974,7 @@ function About() {
             </div>
             <div className=' w-[30%] md:w-full  h-full flex flex-col  items-center md:items-end '>
               <ScoreCircle score={Math.round(score)} />
-              <h1 className=' absolute bottom-0 right-0 md:left-0  font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
+              <h1 className=' absolute bottom-0 z-0 right-0 md:left-0  font-black text-6xl text-[#a8b6cb]'>{lguInfo["LGU Name"]} </h1>
 
 
             </div>
@@ -993,7 +999,7 @@ function About() {
         </div>
 
         <div className="py-4 md:py-6 w-full md:w-full">
-        {activeTab === 'About' && (
+          {activeTab === 'About' && (
             <div className="w-full md:flex-row grid direction-reverse grid-cols-6">
               <p className="mb-4 text-sm md:text-base col-span-6">{lguInfo.descriptioon}</p>
               <div className=" hidden  sm:col-span-6 sm:flex justify-center items-start">
@@ -1016,6 +1022,85 @@ function About() {
                 <div className="mt-8">
                   <h3 className="text-xl font-semibold mb-4">Website & IT Infrastructure</h3>
                   <ITInfrastructureInfo lguName={lguInfo["LGU Name"]} data={Data} />
+                </div>
+
+                {/* Add the new IT Governance Assessment table right after */}
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold mb-4">IT Governance, Cybersecurity, and Data Privacy</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border border-gray-200">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="px-4 py-2 text-left border-b">Assessment Item</th>
+                          <th className="px-4 py-2 text-left border-b">Status</th>
+                          <th className="px-4 py-2 text-left border-b">Details</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          const assessment = getITReadinessAssessmentData(lguInfo["LGU Name"], Data);
+                          if (!assessment) return null;
+
+                          return [
+                            { label: "ISSP Plan", value: assessment.isspPlan },
+                            { label: "ICT Roadmap Plan", value: assessment.ictRoadmap },
+                            { label: "ICT Council", value: assessment.ictCouncil },
+                            { 
+                              label: "ICT Committee Head", 
+                              value: assessment.ictCommitteeHead,
+                              details: assessment.committeeHeadName 
+                            },
+                            { label: "ICT Unit/Section", value: assessment.ictUnit },
+                            { 
+                              label: "Data Privacy Officer", 
+                              value: assessment.dataPrivacyOfficer,
+                              details: assessment.dpoName 
+                            },
+                            { label: "Cybersecurity Plan", value: assessment.cybersecurityPlan },
+                            { label: "Cybersecurity Protocol", value: assessment.cybersecurityProtocol },
+                            { 
+                              label: "Additional ICT Plans", 
+                              value: assessment.additionalPlans.length > 0,
+                              details: assessment.additionalPlans 
+                            },
+                            { label: "NCERT Team", value: assessment.ncertTeam },
+                            { label: "Cybersecurity Training", value: assessment.cybersecurityTraining },
+                            { label: "Regular Password Change Policy", value: assessment.passwordPolicy },
+                            { label: "Disaster Recovery Plan", value: assessment.disasterRecoveryPlan },
+                            { label: "Data Privacy Act Training", value: assessment.dataPrivacyActTraining }
+                          ].map((item, index) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                              <td className="px-4 py-2 border-b font-medium">{item.label}</td>
+                              <td className="px-4 py-2 border-b">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  item.value 
+                                    ? "bg-green-100 text-green-800" 
+                                    : "bg-red-100 text-red-800"
+                                }`}>
+                                  {item.value ? "Yes" : "No"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2 border-b">
+                                {item.details && (
+                                  <div className="text-sm text-gray-600">
+                                    {Array.isArray(item.details) ? (
+                                      <ul className="list-disc pl-5">
+                                        {item.details.map((plan, i) => (
+                                          <li key={i}>{plan.trim()}</li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <span>{item.details}</span>
+                                    )}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          ));
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* Add Connectivity Information Table */}
@@ -1294,77 +1379,77 @@ function About() {
           )}
           {activeTab === 'Assessment' && renderAssessmentContent()}
           {/* {activeTab === 'Attachments' && (
-  <div className="w-full overflow-x-auto">
-    <h3 className="text-xl font-semibold mb-4">Employee Distribution by Office</h3>
-    <table className="min-w-full bg-white border border-gray-200">
-      <thead>
-        <tr className="bg-gray-100">
-          <th className="px-4 py-2 text-left border-b">Office</th>
-          <th className="px-4 py-2 text-center border-b">Permanent</th>
-          <th className="px-4 py-2 text-center border-b">Casual</th>
-          <th className="px-4 py-2 text-center border-b">Job Order</th>
-          <th className="px-4 py-2 text-center border-b">Co-Terminus</th>
-          <th className="px-4 py-2 text-center border-b font-semibold">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        {Data["HR (Employee List)"]
-          .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
-          .map((office: any, index: number) => (
-            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-              <td className="px-4 py-2 border-b">{office["Office"]}</td>
-              <td className="px-4 py-2 text-center border-b">{office["Permanent Employees"] || 0}</td>
-              <td className="px-4 py-2 text-center border-b">{office["Casual Employees"] || 0}</td>
-              <td className="px-4 py-2 text-center border-b">{office["Job Order Employees"] || 0}</td>
-              <td className="px-4 py-2 text-center border-b">{office["Co-Terminus Employees"] || 0}</td>
-              <td className="px-4 py-2 text-center border-b font-medium">
-                {(office["Permanent Employees"] || 0) +
-                  (office["Casual Employees"] || 0) +
-                  (office["Job Order Employees"] || 0) +
-                  (office["Co-Terminus Employees"] || 0) +
-                  (office["Temporary Employees"] || 0)}
-              </td>
-            </tr>
-          ))}
-        <tr className="bg-blue-50 font-medium">
-          <td className="px-4 py-2 border-b">Total</td>
-          <td className="px-4 py-2 text-center border-b">
-            {Data["HR (Employee List)"]
-              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
-              .reduce((sum: number, office: any) => sum + (office["Permanent Employees"] || 0), 0)}
-          </td>
-          <td className="px-4 py-2 text-center border-b">
-            {Data["HR (Employee List)"]
-              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
-              .reduce((sum: number, office: any) => sum + (office["Casual Employees"] || 0), 0)}
-          </td>
-          <td className="px-4 py-2 text-center border-b">
-            {Data["HR (Employee List)"]
-              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
-              .reduce((sum: number, office: any) => sum + (office["Job Order Employees"] || 0), 0)}
-          </td>
-          <td className="px-4 py-2 text-center border-b">
-            {Data["HR (Employee List)"]
-              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
-              .reduce((sum: number, office: any) => sum + (office["Co-Terminus Employees"] || 0), 0)}
-          </td>
-        
-          <td className="px-4 py-2 text-center border-b bg-blue-100 font-semibold">
-            {Data["HR (Employee List)"]
-              .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
-              .reduce((sum: number, office: any) => 
-                sum + 
-                (office["Permanent Employees"] || 0) +
-                (office["Casual Employees"] || 0) +
-                (office["Job Order Employees"] || 0) +
-                (office["Co-Terminus Employees"] || 0) +
-                (office["Temporary Employees"] || 0), 0)}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-)} */}
+            <div className="w-full overflow-x-auto">
+              <h3 className="text-xl font-semibold mb-4">Employee Distribution by Office</h3>
+              <table className="min-w-full bg-white border border-gray-200">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="px-4 py-2 text-left border-b">Office</th>
+                    <th className="px-4 py-2 text-center border-b">Permanent</th>
+                    <th className="px-4 py-2 text-center border-b">Casual</th>
+                    <th className="px-4 py-2 text-center border-b">Job Order</th>
+                    <th className="px-4 py-2 text-center border-b">Co-Terminus</th>
+                    <th className="px-4 py-2 text-center border-b font-semibold">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Data["HR (Employee List)"]
+                    .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+                    .map((office: any, index: number) => (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                        <td className="px-4 py-2 border-b">{office["Office"]}</td>
+                        <td className="px-4 py-2 text-center border-b">{office["Permanent Employees"] || 0}</td>
+                        <td className="px-4 py-2 text-center border-b">{office["Casual Employees"] || 0}</td>
+                        <td className="px-4 py-2 text-center border-b">{office["Job Order Employees"] || 0}</td>
+                        <td className="px-4 py-2 text-center border-b">{office["Co-Terminus Employees"] || 0}</td>
+                        <td className="px-4 py-2 text-center border-b font-medium">
+                          {(office["Permanent Employees"] || 0) +
+                            (office["Casual Employees"] || 0) +
+                            (office["Job Order Employees"] || 0) +
+                            (office["Co-Terminus Employees"] || 0) +
+                            (office["Temporary Employees"] || 0)}
+                        </td>
+                      </tr>
+                    ))}
+                  <tr className="bg-blue-50 font-medium">
+                    <td className="px-4 py-2 border-b">Total</td>
+                    <td className="px-4 py-2 text-center border-b">
+                      {Data["HR (Employee List)"]
+                        .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+                        .reduce((sum: number, office: any) => sum + (office["Permanent Employees"] || 0), 0)}
+                    </td>
+                    <td className="px-4 py-2 text-center border-b">
+                      {Data["HR (Employee List)"]
+                        .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+                        .reduce((sum: number, office: any) => sum + (office["Casual Employees"] || 0), 0)}
+                    </td>
+                    <td className="px-4 py-2 text-center border-b">
+                      {Data["HR (Employee List)"]
+                        .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+                        .reduce((sum: number, office: any) => sum + (office["Job Order Employees"] || 0), 0)}
+                    </td>
+                    <td className="px-4 py-2 text-center border-b">
+                      {Data["HR (Employee List)"]
+                        .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+                        .reduce((sum: number, office: any) => sum + (office["Co-Terminus Employees"] || 0), 0)}
+                    </td>
+
+                    <td className="px-4 py-2 text-center border-b bg-blue-100 font-semibold">
+                      {Data["HR (Employee List)"]
+                        .filter((item: any) => item["LGU Name"]?.toUpperCase() === lguInfo["LGU Name"]?.toUpperCase())
+                        .reduce((sum: number, office: any) =>
+                          sum +
+                          (office["Permanent Employees"] || 0) +
+                          (office["Casual Employees"] || 0) +
+                          (office["Job Order Employees"] || 0) +
+                          (office["Co-Terminus Employees"] || 0) +
+                          (office["Temporary Employees"] || 0), 0)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )} */}
         </div>
       </div>
     </div>
@@ -1597,17 +1682,17 @@ const CentralizedDevicesTable = ({ lguName, data }: CentralizedDevicesTableProps
                 </span>
               </td>
               {/* <td className="px-4 py-2 border-b">
-                <div className="flex items-center"> */}
-              {/* <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                <div className="flex items-center">
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
                     <div
                       className="bg-blue-600 h-2.5 rounded-full"
                       style={{ width: `${(item.deviceCount / totalDevices) * 100}%` }}
                     ></div>
-                  </div> */}
-              {/* <span className="text-xs font-medium">
+                  </div>
+                  <span className="text-xs font-medium">
                     {((item.deviceCount / totalDevices) * 100).toFixed(1)}%
-                  </span> */}
-              {/* </div>
+                  </span>
+                </div>
               </td> */}
             </tr>
           ))}
@@ -1925,30 +2010,31 @@ const ISPInformationTable = ({ lguName, data }: { lguName: string, data: any }) 
 
 
 
+
 const InfoCard = ({ label, value, span }: any) => (
-  <div className={`bg-gray-50 p-4 rounded-lg border border-border col-span-${span ? span : 1}`}>
+  <div className={`bg-gray-50/30 backdrop-blur-sm p-4 rounded-lg border border-border col-span-${span ? span : 1}`}>
     <div className="text-sm text-gray-700 mb-1">{label}</div>
     <div className="font-bold text-lg">{value}</div>
   </div>
 );
 
 const ScoreCircle = ({ score }: { score: number }) => (
-  <div className="flex flex-col items-center">
+  <div className="flex flex-col items-center z-10">
     <div className="text-xl font-bold text-[#0036C5] mb-2">Score</div>
     <div className="relative w-40 h-40 sm:w-44 sm:h-44">
-      <svg 
-        className="w-full h-full transform -rotate-90" 
-        viewBox="0 0 100 100" 
+      <svg
+        className="w-full h-full transform -rotate-90"
+        viewBox="0 0 100 100"
         preserveAspectRatio="xMidYMid meet"
       >
-        <circle 
-          cx="50" 
-          cy="50" 
-          r="45" 
-          fill="none" 
-          stroke="#ecc216" 
-          strokeWidth="8" 
-        
+        <circle
+          cx="50"
+          cy="50"
+          r="45"
+          fill="none"
+          stroke="#ecc216"
+          strokeWidth="8"
+
         />
         <circle
           cx="50"
@@ -1959,11 +2045,11 @@ const ScoreCircle = ({ score }: { score: number }) => (
           strokeWidth="8"
           strokeLinecap="round"
           strokeDasharray={`${(score / 100) * 251.2} 251.2`}
-         
+
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span 
+        <span
           className="text-5xl sm:text-5xl font-bold"
           style={{ color: score >= 50 ? '#0036c6' : '#ecc216' }}
         >
@@ -2480,5 +2566,59 @@ const calculateAverageRating = (offices: string[], category: string, questionNum
 
   return count > 0 ? total / count : 0;
 };
+
+// Add this function before the return statement in the About component
+function getITReadinessAssessmentData(lguName: string, data: any) {
+  const itOfficeData = data["IT Office"].find(
+    (item: any) => item["LGU Name"]?.toUpperCase() === lguName?.toUpperCase()
+  );
+
+  if (!itOfficeData) return null;
+
+  // Parse JSON data for personnel and additional plans
+  let committeeHead = "";
+  let dpoPersonnel = "";
+  let additionalPlans = [];
+
+  try {
+    const committeeHeadData = JSON.parse(itOfficeData["IT Readiness Assessment A4.1"] || "[]");
+    committeeHead = committeeHeadData[0]?.["Committee Head Personnel"] || "";
+  } catch (e) {
+    console.error("Error parsing committee head data:", e);
+  }
+
+  try {
+    const dpoData = JSON.parse(itOfficeData["IT Readiness Assessment A6.1"] || "[]");
+    dpoPersonnel = dpoData[0]?.["DPO Personnel"] || "";
+  } catch (e) {
+    console.error("Error parsing DPO data:", e);
+  }
+
+  try {
+    const plansData = JSON.parse(itOfficeData["IT Readiness Assessment A9"] || "[]");
+    additionalPlans = plansData[0]?.["Additional plans, roadmaps, or strategies related to ICT."]?.split(",") || [];
+  } catch (e) {
+    console.error("Error parsing additional plans data:", e);
+  }
+
+  return {
+    isspPlan: itOfficeData["IT Readiness Assessment A1"] === "Yes",
+    ictRoadmap: itOfficeData["IT Readiness Assessment A2"] === "Yes",
+    ictCouncil: itOfficeData["IT Readiness Assessment A3"] === "Yes",
+    ictCommitteeHead: itOfficeData["IT Readiness Assessment A4"] === "Yes",
+    committeeHeadName: committeeHead,
+    ictUnit: itOfficeData["IT Readiness Assessment A5"] === "Yes",
+    dataPrivacyOfficer: itOfficeData["IT Readiness Assessment A6"] === "Yes",
+    dpoName: dpoPersonnel,
+    cybersecurityPlan: itOfficeData["IT Readiness Assessment A7"] === "Yes",
+    cybersecurityProtocol: itOfficeData["IT Readiness Assessment A8"] === "Yes",
+    additionalPlans: additionalPlans,
+    ncertTeam: itOfficeData["IT Readiness Assessment A10"] === "Yes",
+    cybersecurityTraining: itOfficeData["IT Readiness Assessment A11"] === "Yes",
+    passwordPolicy: itOfficeData["IT Readiness Assessment A12"] === "Yes",
+    disasterRecoveryPlan: itOfficeData["IT Readiness Assessment A13"] === "Yes",
+    dataPrivacyActTraining: itOfficeData["IT Readiness Assessment A14"] === "Yes"
+  };
+}
 
 export default About;
