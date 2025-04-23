@@ -576,19 +576,19 @@ const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits
                       stroke={
                         Percentage(selectedAssessment) >= 80 ? '#0036C5' :
                           Percentage(selectedAssessment) >= 50 ? '#ecc314' :
-                            Percentage(selectedAssessment) >= 30 ? '#FBBF24' : '#EF4444'
+                            Percentage(selectedAssessment) >= 30 ? '#EF4444' : '#EF4444'
                       }
                       strokeWidth="8"
                       strokeLinecap="round"
                       strokeDasharray={`${(Percentage(selectedAssessment) / 100) * 251.2} 251.2`}
                     />
                   </svg>
-                  <div className="absolute inset-0 flex  items-center justify-center">
+                  <div className="absolute inset-0 flex  text-[#FBBF24] items-center justify-center">
                     <span className="text-2xl font-bold" style={{
                       color:
                         Percentage(selectedAssessment) >= 80 ? '#0036C5' :
                           Percentage(selectedAssessment) >= 50 ? '#ecc314' :
-                            Percentage(selectedAssessment) >= 30 ? '#FBBF24' : '#EF4444'
+                            Percentage(selectedAssessment) >= 30 ? '#EF4444' : '#EF4444'
                     }}>
                       {Percentage(selectedAssessment)?.toFixed(1)}%
                     </span>

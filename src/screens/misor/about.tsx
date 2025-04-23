@@ -576,7 +576,7 @@ const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits
                       stroke={
                         Percentage(selectedAssessment) >= 80 ? '#0036C5' :
                           Percentage(selectedAssessment) >= 50 ? '#ecc314' :
-                            Percentage(selectedAssessment) >= 30 ? '#FBBF24' : '#EF4444'
+                            Percentage(selectedAssessment) >= 30 ? '#EF4444' : '#EF4444'
                       }
                       strokeWidth="8"
                       strokeLinecap="round"
@@ -588,7 +588,7 @@ const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits
                       color:
                         Percentage(selectedAssessment) >= 80 ? '#0036C5' :
                           Percentage(selectedAssessment) >= 50 ? '#ecc314' :
-                            Percentage(selectedAssessment) >= 30 ? '#FBBF24' : '#EF4444'
+                            Percentage(selectedAssessment) >= 30 ? '#EF4444' : '#EF4444'
                     }}>
                       {Percentage(selectedAssessment)?.toFixed(1)}%
                     </span>
