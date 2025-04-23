@@ -574,21 +574,21 @@ const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits
                       r="40"
                       fill="none"
                       stroke={
-                        Percentage(selectedAssessment) >= 80 ? '#10B981' :
-                          Percentage(selectedAssessment) >= 60 ? '#0036C5' :
-                            Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
+                        Percentage(selectedAssessment) >= 80 ? '#0036C5' :
+                          Percentage(selectedAssessment) >= 50 ? '#ecc314' :
+                            Percentage(selectedAssessment) >= 30 ? '#FBBF24' : '#EF4444'
                       }
                       strokeWidth="8"
                       strokeLinecap="round"
                       strokeDasharray={`${(Percentage(selectedAssessment) / 100) * 251.2} 251.2`}
                     />
                   </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex  items-center justify-center">
                     <span className="text-2xl font-bold" style={{
                       color:
-                        Percentage(selectedAssessment) >= 80 ? '#10B981' :
-                          Percentage(selectedAssessment) >= 60 ? '#0036C5' :
-                            Percentage(selectedAssessment) >= 40 ? '#FBBF24' : '#EF4444'
+                        Percentage(selectedAssessment) >= 80 ? '#0036C5' :
+                          Percentage(selectedAssessment) >= 50 ? '#ecc314' :
+                            Percentage(selectedAssessment) >= 30 ? '#FBBF24' : '#EF4444'
                     }}>
                       {Percentage(selectedAssessment)?.toFixed(1)}%
                     </span>
@@ -622,7 +622,7 @@ const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits
                     // Determine color based on score
                     const scoreColor = score >= 80 ? 'bg-blue-50 border-blue-300' :
                       score >= 50 ? ' bg-yellow-100/40 border-yellow-200' :
-                        score >= 30 ? 'bg-red-100 border-red-200' : 'bg-red-50 border-red-200';
+                        score >= 30 ? 'bg-red-100 border-red-200' : 'bg-red-100 border-red-200';
 
                     return (
                       <div
