@@ -191,7 +191,7 @@ function App() {
                       {provincesData.camiguin.map((lgu, index) => (
                         <li key={index} className="flex items-center justify-between p-2 text-white hover:bg-[#1C1D20]/50 cursor-pointer rounded-sm">
                           <Link
-                            to={`/misamis-oriental/${lgu.name.toUpperCase().replace(/\s+/g, '-')}`}
+                            to={`/camiguin/${lgu.name.toUpperCase().replace(/\s+/g, ' s')}`}
                             className="text-white text-sm md:text-base flex-grow"
                           >
                             {lgu.name.toUpperCase()}
@@ -232,7 +232,7 @@ function App() {
                       {provincesData.misamisOriental.map((lgu, index) => (
                         <li key={index} className="flex items-center justify-between p-2 text-white hover:bg-[#1C1D20]/50 cursor-pointer rounded-sm">
                           <Link
-                            to={`/misamis-oriental/${lgu.name.toUpperCase().replace(/\s+/g, '-')}`}
+                            to={`/misamis-oriental/${lgu.name.toUpperCase().replace(/\s+/g, ' ')}`}
                             className="text-white text-sm md:text-base flex-grow"
                           >
                             {lgu.name.toUpperCase()}
