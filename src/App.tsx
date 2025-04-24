@@ -7,9 +7,10 @@ import { useState, useEffect } from "react";
 import { DashboardProvider } from './hooks/DashboardContext';
 import { ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { getCamiguinLGUList, getMisorLGUList } from "./lib/functions/PerProvince";
-
+import { useNavigate } from 'react-router-dom';
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const [isOpen, setIsOpen] = useState(true);
   const [isAtBottom, setIsAtBottom] = useState(false);
@@ -166,7 +167,10 @@ function App() {
                   <div
                     className={`flex items-center justify-between cursor-pointer p-2 rounded-sm ${isActiveRoute('/camiguin') ? 'bg-[#1C1D20]' : 'hover:bg-[#1C1D20]'
                       }`}
-                    onClick={() => toggleProvince('camiguin')}
+                    onClick={() => {
+                      toggleProvince('camiguin');
+                      navigate('/camiguin');
+                    }}
                   >
                     <div className="flex items-center space-x-2">
                       <Building2Icon className="text-white" />
@@ -207,7 +211,10 @@ function App() {
                   <div
                     className={`flex items-center justify-between cursor-pointer p-2 rounded-sm ${isActiveRoute('/misamis-oriental') ? 'bg-[#1C1D20]' : 'hover:bg-[#1C1D20]'
                       }`}
-                    onClick={() => toggleProvince('misamisOriental')}
+                    onClick={() => {
+                      toggleProvince('misamisOriental');
+                      navigate('/misamis-oriental');
+                    }}
                   >
                     <div className="flex items-center space-x-2">
                       <Building2Icon className="text-white" />
