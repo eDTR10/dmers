@@ -6,7 +6,7 @@ import Buildings from './assets/buildings.png';
 import { useState, useEffect } from "react";
 import { DashboardProvider } from './hooks/DashboardContext';
 import { ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
-import { getCamiguinLGUList, getMisorLGUList } from "./lib/functions/PerProvince";
+// import { getCamiguinLGUList, getMisorLGUList } from "./lib/functions/PerProvince";
 import { useNavigate } from 'react-router-dom';
 function App() {
   const location = useLocation();
@@ -15,8 +15,8 @@ function App() {
   const [isOpen, setIsOpen] = useState(true);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [expandedProvince, setExpandedProvince] = useState<string | null>(null);
-  const camiguinLGUs = getCamiguinLGUList();
-  const misorLGUs = getMisorLGUList();
+  // const camiguinLGUs = getCamiguinLGUList();
+  // const misorLGUs = getMisorLGUList();
   // LGU data with scores
   const provincesData = {
     camiguin: [
