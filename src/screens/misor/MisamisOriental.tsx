@@ -285,10 +285,10 @@ function MisamisOriental() {
       acc[key] = Data[key];
     }
 
-
-    
     return acc;
   }, {} as typeof Data);
+
+  // Log the filtered data
 
   return (
     <div className="min-h-full w-full flex items-center justify-center">

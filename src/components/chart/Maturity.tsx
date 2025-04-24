@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-// import ChartDataLabels from 'chartjs-plugin-datalabels';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
 // Register Chart.js components
@@ -71,7 +71,18 @@ interface DashboardProps {
 // For Digital Skills Assessment:
 
 
-const TechnologyCard: React.FC<CardProps> = ({ title, percentage, barData, maxBarValue = 100, colSpan = 1 }) => {
+const TechnologyCard: React.FC<CardProps & {
+  lguData?: { name: string; score: number }[];
+}> = ({
+  title,
+  percentage,
+  barData,
+  maxBarValue = 100,
+  colSpan = 1,
+  lguData = [],
+}) => {
+  const [expanded, setExpanded] = useState(false);
+
   // Gauge chart data
   const gaugeData = {
     datasets: [
@@ -168,23 +179,91 @@ const TechnologyCard: React.FC<CardProps> = ({ title, percentage, barData, maxBa
   const colSpanClass = `col-span-1 md:col-span-${colSpan}`;
 
   return (
-    <div className={`bg-white ${colSpanClass} p-2 rounded-lg border border-border flex flex-col`}>
+    <div
+      className={`bg-white ${colSpanClass} p-2 rounded-lg border border-border flex flex-col cursor-pointer`}
+      onClick={() => setExpanded((prev) => !prev)}
+    >
       <h3 className="text-center text-xs font-medium mb-2">{title}</h3>
-
-      {/* Larger Gauge Chart */}
-      <div className="relative h-24 flex justify-center mb-2">
-        <div className="w-full h-full">
-          <Doughnut data={gaugeData} options={gaugeOptions} />
+      {!expanded ? (
+        <>
+          {/* Larger Gauge Chart */}
+          <div className="relative h-24 flex justify-center mb-2">
+            <div className="w-full h-full">
+              <Doughnut data={gaugeData} options={gaugeOptions} />
+            </div>
+            <div className="absolute bottom-2 text-base font-bold">
+              {percentage.toFixed(2)}%
+            </div>
+          </div>
+          {/* Bar Chart */}
+          <div className="mt-2" style={{ height: `${barHeight}px` }}>
+            <Bar data={barChartData} options={barOptions} />
+          </div>
+        </>
+      ) : (
+        // Expanded LGU breakdown
+        <div className="bg-white p-4 border border-gray-200 rounded-lg">
+          <h2 className="text-sm font-medium mb-4">Score Breakdown per LGUs</h2>
+          <div className="min-h-[200px]">
+            <div style={{ minHeight: `${lguData.length * 45}px` }}>
+              <Bar
+                data={{
+                  labels: lguData.map((lgu: any) => lgu.name),
+                  datasets: [{
+                    label: 'Assessment Score',
+                    data: lguData.map((lgu: any) => lgu.score),
+                    backgroundColor: lguData.map((_: any, index: number) =>
+                      index % 2 === 0 ? '#0036C5' : '#ECC217'
+                    ),
+                    borderWidth: 1,
+                    barThickness: 25,
+                    maxBarThickness: 30,
+                  }]
+                }}
+                options={{
+                  maintainAspectRatio: false,
+                  indexAxis: 'y',
+                  scales: {
+                    x: {
+                      beginAtZero: true,
+                      max: 100,
+                      ticks: {
+                        callback: function (value: any) {
+                          return value + '%';
+                        },
+                        font: { size: 12 }
+                      }
+                    },
+                    y: {
+                      ticks: {
+                        autoSkip: false,
+                        padding: 8,
+                        font: { size: 12 }
+                      }
+                    }
+                  },
+                  plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                      display: true,
+                      color: '#000',
+                      anchor: 'end',
+                      align: 'end',
+                      formatter: (value: any) => `${value}%`,
+                      font: { weight: 'bold', size: 12 },
+                      padding: 6
+                    }
+                  },
+                  layout: {
+                    padding: { right: 30, top: 10, bottom: 10 }
+                  }
+                }}
+                plugins={[ChartDataLabels]}
+              />
+            </div>
+          </div>
         </div>
-        <div className="absolute bottom-2 text-base font-bold">
-          {percentage.toFixed(2)}%
-        </div>
-      </div>
-
-      {/* Bar Chart */}
-      <div className="mt-2" style={{ height: `${barHeight}px` }}>
-        <Bar data={barChartData} options={barOptions} />
-      </div>
+      )}
     </div>
   );
 };
@@ -533,6 +612,131 @@ const Dashboard: React.FC<DashboardProps> = ({
     );
   };
 
+  // Helper to get LGU breakdown data by LGU Name (not by office)
+  const getLGUBreakdown = (
+    data: SurveyData,
+    type: 'digitalSkills' | 'tri' | 'ict' | 'itReadiness'
+  ) => {
+    // Find all unique LGU Names from all offices
+    const lguNamesSet = new Set<string>();
+    Object.values(data).forEach((offices: any) => {
+      if (Array.isArray(offices)) {
+        offices.forEach((office: any) => {
+          if (office && office["LGU Name"]) {
+            lguNamesSet.add(office["LGU Name"]);
+          }
+        });
+      }
+    });
+    const lguNames = Array.from(lguNamesSet);
+  
+    // Map and calculate scores
+    let lguScores = lguNames.map(lguName => {
+      // Gather all office entries for this LGU Name
+      let offices = Object.values(data).flatMap((officesArr: any) =>
+        Array.isArray(officesArr)
+          ? officesArr.filter((office: any) => office && office["LGU Name"] === lguName)
+          : []
+      );
+  
+      // For IT Readiness and ICT Change, use only IT Office entries
+      if (type === 'itReadiness' || type === 'ict') {
+        offices = offices.filter(
+          (office: any) =>
+            office["OFFICE SELECTION"] === "MIS/IT" ||
+            office["OFFICE SELECTION"] === "MIS\\/IT" ||
+            office["OFFICE SELECTION"] === "IT Office"
+        );
+      }
+  
+      let score = 0;
+      if (type === 'digitalSkills') {
+        const responses = offices.flatMap((office: any) =>
+          Array.from({ length: 10 }, (_, i) => Number(office[`Question ${i + 1} DigitalSkillsAssessment`] || 0))
+        ).filter((v: number) => !isNaN(v));
+        const total = responses.reduce((a: number, b: number) => a + b, 0);
+        score = responses.length ? (total / (responses.length * 5)) * 100 : 0;
+      } else if (type === 'tri') {
+        const optimism = offices.flatMap((office: any) =>
+          Array.from({ length: 10 }, (_, i) => Number(office[`Optimism ${i + 1}`] || 0))
+        );
+        const innov = offices.flatMap((office: any) =>
+          Array.from({ length: 7 }, (_, i) => Number(office[`Innovativeness ${i + 1}`] || 0))
+        );
+        const discomfort = offices.flatMap((office: any) =>
+          Array.from({ length: 10 }, (_, i) => Number(office[`Discomfort ${i + 1}`] || 0))
+        );
+        const insecurity = offices.flatMap((office: any) =>
+          Array.from({ length: 9 }, (_, i) => Number(office[`Insecurity ${i + 1}`] || 0))
+        );
+        const getScore = (arr: number[]) => arr.length ? (arr.reduce((a, b) => a + b, 0) / (arr.length * 5)) * 100 : 0;
+        score = (getScore(optimism) + getScore(innov) + getScore(discomfort) + getScore(insecurity)) / 4;
+      } else if (type === 'ict') {
+        const keys = [
+          ...Array.from({ length: 3 }, (_, i) => `CHANGE READINESS ${i + 1}`),
+          ...Array.from({ length: 2 }, (_, i) => `CHANGE LEADERSHIP ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `CHANGE COMMUNICATION ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `CHANGE IMPACT ASSESSMENT ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `STAKEHOLDER ENGAGEMENT ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `CHANGE PLANNING AND EXECUTION ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `TRAINING AND DEVELOPMENT ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Resistance Management ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Evaluation and Continuous Improvement ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Sustainability and Embedding ${i + 1}`),
+          ...Array.from({ length: 5 }, (_, i) => `Costs or Financial ${i + 1}`),
+        ];
+        const responses = offices.flatMap((office: any) =>
+          keys.map(key => Number(office[key] || 0))
+        ).filter((v: number) => !isNaN(v));
+        const total = responses.reduce((a: number, b: number) => a + b, 0);
+        score = responses.length ? (total / (responses.length * 5)) * 100 : 0;
+      } else if (type === 'itReadiness') {
+        const keys = [
+          ...Array.from({ length: 4 }, (_, i) => `BASIC IT READINESS ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `IT GOVERNANCE FRAMEWORK & POLICIES ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `IT STRATEGY AND ALIGNMENT ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `IT POLICIES AND PROCEDURES ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `RISK MANAGEMENT ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `IT PERFORMANCE MEASUREMENT AND REPORTING ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `IT INVESTMENT MANAGEMENT ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `VENDOR MANAGEMENT ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `IT SECURITY AND COMPLIANCE ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `ICT Organizational Structure and Skills ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Audit and Assurance ${i + 1}`),
+          ...Array.from({ length: 2 }, (_, i) => `Network Infrastructure ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Servers and Storage ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Virtualization ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Data Backup and Recovery ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Scalability and Elasticity ${i + 1}`),
+          ...Array.from({ length: 4 }, (_, i) => `Security Measures ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Monitoring and Performance ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Compliance and Governance ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Integration and Interoperability ${i + 1}`),
+          ...Array.from({ length: 3 }, (_, i) => `Disaster Recovery and Business Continuity ${i + 1}`),
+        ];
+        const responses = offices.flatMap((office: any) =>
+          keys.map(key => Number(office[key] || 0))
+        ).filter((v: number) => !isNaN(v));
+        const total = responses.reduce((a: number, b: number) => a + b, 0);
+        score = responses.length ? (total / (responses.length * 5)) * 100 : 0;
+      }
+      return { name: lguName, score: Number(score.toFixed(2)) };
+    });
+  
+    // Remove entries with name 'lguname' (case-insensitive) or empty/0% score
+    lguScores = lguScores.filter(
+      lgu =>
+        lgu.name &&
+        lgu.name.trim().toLowerCase() !== 'lguname' &&
+        lgu.score > 0
+    );
+  
+    // Sort from highest to lowest
+    lguScores.sort((a, b) => b.score - a.score);
+  
+    return lguScores;
+  };
+
   return (
 
 
@@ -546,6 +750,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           colors: getAlternatingColors(digitalSkillsData.labels.length)
         }}
         colSpan={cardLayouts.digitalSkills?.colSpan || 1}
+        lguData={getLGUBreakdown(data, 'digitalSkills')}
       />
 
       <TechnologyCard
@@ -557,6 +762,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           colors: getAlternatingColors(triData.labels.length)
         }}
         colSpan={cardLayouts.tri?.colSpan || 1}
+        lguData={getLGUBreakdown(data, 'tri')}
       />
 
       <TechnologyCard
@@ -568,6 +774,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           colors: getAlternatingColors(ictData.labels.length)
         }}
         colSpan={cardLayouts.ictChange?.colSpan || 1}
+        lguData={getLGUBreakdown(data, 'ict')}
       />
 
       <TechnologyCard
@@ -580,6 +787,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         }}
         maxBarValue={100}
         colSpan={cardLayouts.itReadiness?.colSpan || 1}
+        lguData={getLGUBreakdown(data, 'itReadiness')}
       />
     </div>
 

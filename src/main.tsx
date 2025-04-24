@@ -12,9 +12,9 @@ const Dashbaord= lazy(() =>
   wait(1300).then(() => import("./screens/dashsboard.tsx"))
 );
 
-// const Page2= lazy(() =>
-//   wait(1300).then(() => import("./screens/page2.tsx"))
-// );
+const Page2= lazy(() =>
+  wait(1300).then(() => import("./screens/page2.tsx"))
+);
 
 
 const MisamisOriental= lazy(() =>
@@ -32,6 +32,12 @@ const About2 = lazy(() =>
 );
 
 const router = createBrowserRouter([
+  {
+    path: "/form",
+    element: <Page2 />,
+    
+   
+  },
   {
     path: "/",
     element: <App />,

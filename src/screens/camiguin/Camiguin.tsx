@@ -296,7 +296,7 @@ function Camiguin() {
     
     return acc;
   }, {} as typeof Data);
-
+  console.log("Filtered Data ss:", filteredData); 
   return (
     <div className="min-h-full w-full flex items-center justify-center">
 
