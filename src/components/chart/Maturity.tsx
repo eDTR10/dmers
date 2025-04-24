@@ -730,10 +730,12 @@ const Dashboard: React.FC<DashboardProps> = ({
         lgu.name.trim().toLowerCase() !== 'lguname' &&
         lgu.score > 0
     );
-  
-    // Sort from highest to lowest
-    lguScores.sort((a, b) => b.score - a.score);
-  
+
+    // Sort alphabetically by LGU name (case-insensitive)
+    lguScores.sort((a, b) =>
+      a.name.trim().toLowerCase().localeCompare(b.name.trim().toLowerCase())
+    );
+
     return lguScores;
   };
 
