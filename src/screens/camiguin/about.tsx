@@ -1186,11 +1186,29 @@ const [selectedOtherOffice, setSelectedOtherOffice] = useState("Business Permits
               console.error("Error parsing computing devices data:", error);
               computingDevices = [];
             }
+
+            function deviceInfo(params:any) {
+              switch (params) {
+              case 1:
+                
+                return "Desktop/Laptop";
+              case 2:
+                return "Smartphones/Tablets";
+              case 6:
+                return "Others";
+            
+              default:
+                return "N/A";
+                break;
+            }
+            }
+            
+
             return computingDevices.map((device: any, index: number) => (
               <tr key={index} className="bg-gray-50">
                 <td className="px-4 py-2 border-b">
-                  {device["ICT_Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"] === 1 ? "Desktop/Laptop" :
-                   device["ICT_Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"] === 2 ? "Smartphones/Tablets" : "N/A"}
+                  {deviceInfo(device["ICT_Computing Devices (i.e. Desktop/Laptop, Smartphones, Tablet)"])}
+                  
                 </td>
                 <td className="px-4 py-2 text-center border-b">
                   {device["ICT_Number of Device with Internet Access"] || "0"}
